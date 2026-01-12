@@ -6,7 +6,7 @@ export const experienceSchema = z.object({
   location: z.string().optional(),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().optional(),
-  current: z.boolean().default(false),
+  current: z.boolean(),
   description: z.string().min(10, "Description must be at least 10 characters"),
 });
 
