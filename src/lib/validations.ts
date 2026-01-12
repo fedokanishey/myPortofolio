@@ -17,7 +17,7 @@ export const projectSchema = z.object({
   technologies: z.array(z.string()).min(1, "Add at least one technology"),
   liveUrl: z.string().url().optional().or(z.literal("")),
   githubUrl: z.string().url().optional().or(z.literal("")),
-  featured: z.boolean().default(false),
+  featured: z.boolean(),
 });
 
 export const socialLinksSchema = z.object({
