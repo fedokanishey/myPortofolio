@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { SocialLinks } from "@/components/molecules/SocialLinks";
 import { ExperienceItem } from "@/components/molecules/ExperienceItem";
@@ -33,12 +33,12 @@ function hexToHSL(hex: string): string {
 }
 
 // Animation variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 12 } }
 };
