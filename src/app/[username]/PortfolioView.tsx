@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, TargetAndTransition } from "framer-motion";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { SocialLinks } from "@/components/molecules/SocialLinks";
 import { ExperienceItem } from "@/components/molecules/ExperienceItem";
@@ -43,12 +43,12 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 12 } }
 };
 
-const floatAnimation = {
+const floatAnimation: TargetAndTransition = {
   y: [-8, 8, -8],
   transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
 };
 
-const pulseAnimation = {
+const pulseAnimation: TargetAndTransition = {
   scale: [1, 1.05, 1],
   opacity: [0.6, 0.9, 0.6],
   transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
