@@ -19,21 +19,21 @@ export async function generateMetadata({
     };
   }
 
-  const user = portfolio.userId as { name: string; image?: string };
+  const displayName = portfolio.content.name || (portfolio.userId as { name: string })?.name || "Portfolio";
 
   return {
-    title: `${user.name} | Portfolio`,
+    title: `${displayName} | Portfolio`,
     description:
-      portfolio.content.bio || `Check out ${user.name}'s professional portfolio`,
+      portfolio.content.bio || `Check out ${displayName}'s professional portfolio`,
     openGraph: {
-      title: `${user.name} - ${portfolio.content.headline || "Portfolio"}`,
+      title: `${displayName} - ${portfolio.content.headline || "Portfolio"}`,
       description: portfolio.content.bio || undefined,
       images: portfolio.content.avatar ? [portfolio.content.avatar] : undefined,
       type: "profile",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${user.name} | Portfolio`,
+      title: `${displayName} | Portfolio`,
       description: portfolio.content.bio || undefined,
     },
   };
