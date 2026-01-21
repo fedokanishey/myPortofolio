@@ -480,22 +480,7 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputField
-                        label="GitHub URL"
-                        placeholder="https://github.com/..."
-                        {...register("githubUrl")}
-                      />
-                      {previewType === "image" && (
-                        <InputField
-                          label="Project Link (Optional)"
-                          placeholder="https://myproject.com"
-                          {...register("liveUrl")}
-                        />
-                      )}
-                    </div>
-
-                    {/* Preview Type Selection */}
+                                        {/* Preview Type Selection */}
                     <div className="space-y-3">
                       <label className="text-sm font-medium">Project Preview</label>
                       <div className="flex gap-2">
@@ -532,15 +517,28 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
                         </button>
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <InputField
+                        label="GitHub URL"
+                        placeholder="https://github.com/..."
+                        {...register("githubUrl")}
+                      />
+                      {previewType === "image" ?  (
+                        <InputField
+                          label="Project Link (Optional)"
+                          placeholder="https://myproject.com"
+                          {...register("liveUrl")}
+                        />
+                      ):(<InputField
+                          label="Live URL"
+                          placeholder="https://myproject.com"
+                          {...register("liveUrl")}
+                        />)}
+                    </div>
 
                     {/* Preview Content based on type */}
                     {previewType === "live" ? (
                       <div className="space-y-3">
-                        <InputField
-                          label="Live URL"
-                          placeholder="https://myproject.com"
-                          {...register("liveUrl")}
-                        />
                         {/* Live Website Preview (iframe) */}
                         {liveUrl ? (
                           <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
