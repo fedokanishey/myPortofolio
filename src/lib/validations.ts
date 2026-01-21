@@ -8,6 +8,14 @@ export const experienceSchema = z.object({
   endDate: z.string().optional(),
   current: z.boolean(),
   description: z.string().min(10, "Description must be at least 10 characters"),
+}).refine((data) => {
+  if (!data.current && (!data.endDate || data.endDate.trim() === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "End date is required when not currently working here",
+  path: ["endDate"],
 });
 
 export const projectSchema = z.object({
@@ -20,7 +28,17 @@ export const projectSchema = z.object({
   featured: z.boolean(),
 });
 
+export const certificationSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  image: z.string().url().optional().or(z.literal("")),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  technologies: z.array(z.string()).min(1, "Add at least one technology"),
+  date: z.string().min(1, "Date is required"),
+});
+
 export const socialLinksSchema = z.object({
+  email: z.string().email().optional().or(z.literal("")),
+  whatsapp: z.string().optional().or(z.literal("")),
   twitter: z.string().url().optional().or(z.literal("")),
   github: z.string().url().optional().or(z.literal("")),
   linkedin: z.string().url().optional().or(z.literal("")),
@@ -47,7 +65,7 @@ export const profileSchema = z.object({
       "Username can only contain lowercase letters, numbers, and hyphens"
     ),
   headline: z.string().max(100, "Headline must be at most 100 characters").optional(),
-  bio: z.string().max(500, "Bio must be at most 500 characters").optional(),
+  bio: z.string().max(2000, "Bio must be at most 2000 characters").optional(),
   skills: z.array(z.string()).optional(),
   socialLinks: socialLinksSchema.optional(),
 });
@@ -77,6 +95,7 @@ export const portfolioSchema = z.object({
 
 export type ExperienceFormData = z.infer<typeof experienceSchema>;
 export type ProjectFormData = z.infer<typeof projectSchema>;
+export type CertificationFormData = z.infer<typeof certificationSchema>;
 export type SocialLinksFormData = z.infer<typeof socialLinksSchema>;
 export type ThemeConfigFormData = z.infer<typeof themeConfigSchema>;
 export type ProfileFormData = z.infer<typeof profileSchema>;

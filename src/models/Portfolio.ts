@@ -23,7 +23,18 @@ export interface IProject {
   featured: boolean;
 }
 
+export interface ICertification {
+  _id?: string;
+  title: string;
+  image?: string;
+  description: string;
+  technologies: string[];
+  date: string;
+}
+
 export interface ISocialLinks {
+  email?: string;
+  whatsapp?: string;
   twitter?: string;
   github?: string;
   linkedin?: string;
@@ -45,8 +56,10 @@ export interface IContent {
   bio: string;
   avatar?: string;
   coverImage?: string;
+  resume?: string;
   experience: IExperience[];
   projects: IProject[];
+  certifications: ICertification[];
   skills: string[];
   socialLinks: ISocialLinks;
 }
@@ -88,8 +101,21 @@ const ProjectSchema = new Schema<IProject>(
   { _id: true }
 );
 
+const CertificationSchema = new Schema<ICertification>(
+  {
+    title: { type: String, required: true },
+    image: { type: String },
+    description: { type: String, required: true },
+    technologies: [{ type: String }],
+    date: { type: String, required: true },
+  },
+  { _id: true }
+);
+
 const SocialLinksSchema = new Schema<ISocialLinks>(
   {
+    email: { type: String },
+    whatsapp: { type: String },
     twitter: { type: String },
     github: { type: String },
     linkedin: { type: String },
@@ -117,8 +143,10 @@ const ContentSchema = new Schema<IContent>(
     bio: { type: String, default: "" },
     avatar: { type: String },
     coverImage: { type: String },
+    resume: { type: String },
     experience: [ExperienceSchema],
     projects: [ProjectSchema],
+    certifications: [CertificationSchema],
     skills: [{ type: String }],
     socialLinks: { type: SocialLinksSchema, default: () => ({}) },
   },

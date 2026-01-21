@@ -32,8 +32,21 @@ export function ProjectCard({
   className,
 }: ProjectCardProps) {
   const [imageError, setImageError] = React.useState(false);
+  const [descExpanded, setDescExpanded] = React.useState(false);
+  const [techsExpanded, setTechsExpanded] = React.useState(false);
+  
   const hasValidImage = image && !imageError && image.startsWith("http");
   const techs = Array.isArray(technologies) ? technologies : [];
+  
+  // Description logic
+  const maxDescLength = 30;
+  const shouldTruncateDesc = description.length > maxDescLength;
+  
+  // Technologies logic
+  const maxVisibleTechs = 3;
+  const hasMoreTechs = techs.length > maxVisibleTechs;
+  const visibleTechs = techsExpanded ? techs : techs.slice(0, maxVisibleTechs);
+  const remainingTechs = techs.length - maxVisibleTechs;
 
   return (
     <motion.div
@@ -96,20 +109,57 @@ export function ProjectCard({
             <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
               {title}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {description}
-            </p>
+            {/* Description - inline expand like certifications */}
+            {descExpanded ? (
+              <div className="text-sm text-muted-foreground">
+                <p className="whitespace-pre-wrap">{description}</p>
+                <button
+                  onClick={() => setDescExpanded(false)}
+                  className="text-xs font-medium hover:underline mt-1 text-primary"
+                >
+                  See less
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                <span>
+                  {shouldTruncateDesc ? description.slice(0, maxDescLength).trim() + "..." : description}
+                </span>
+                {shouldTruncateDesc && (
+                  <button
+                    onClick={() => setDescExpanded(true)}
+                    className="text-xs font-medium hover:underline ml-1 text-primary"
+                  >
+                    See more
+                  </button>
+                )}
+              </p>
+            )}
           </div>
 
+          {/* Technologies - inline expand */}
           {techs.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {techs.slice(0, 4).map((tech) => (
+            <div className="flex items-center gap-2 flex-wrap">
+              {visibleTechs.map((tech) => (
                 <Badge key={tech} variant="secondary">
                   {tech}
                 </Badge>
               ))}
-              {techs.length > 4 && (
-                <Badge variant="outline">+{techs.length - 4}</Badge>
+              {hasMoreTechs && !techsExpanded && (
+                <button
+                  onClick={() => setTechsExpanded(true)}
+                  className="text-xs font-medium hover:underline text-primary"
+                >
+                  +{remainingTechs} more
+                </button>
+              )}
+              {hasMoreTechs && techsExpanded && (
+                <button
+                  onClick={() => setTechsExpanded(false)}
+                  className="text-xs font-medium hover:underline text-primary"
+                >
+                  Show less
+                </button>
               )}
             </div>
           )}

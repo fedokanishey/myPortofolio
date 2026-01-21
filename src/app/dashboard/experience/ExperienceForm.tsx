@@ -299,6 +299,8 @@ export function ExperienceForm({ portfolio }: ExperienceFormProps) {
                         label="End Date"
                         placeholder="Dec 2023"
                         disabled={isCurrent}
+                        error={errors.endDate?.message}
+                        required={!isCurrent}
                         {...register("endDate")}
                       />
                     </div>

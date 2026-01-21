@@ -4,6 +4,7 @@ export {
   type IPortfolio,
   type IExperience,
   type IProject,
+  type ICertification,
   type ISocialLinks,
   type IThemeConfig,
   type IContent,

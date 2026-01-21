@@ -52,6 +52,8 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
   const [techInput, setTechInput] = React.useState("");
   const [isFetchingPreview, setIsFetchingPreview] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+  const [previewType, setPreviewType] = React.useState<"live" | "image">("live");
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
 
   const {
     register,
@@ -111,6 +113,7 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
     });
     setEditingIndex(null);
     setPreviewImage(null);
+    setPreviewType("live");
     setIsFormOpen(true);
   };
 
@@ -127,6 +130,8 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
     });
     setEditingIndex(index);
     setPreviewImage(proj.image || null);
+    // Determine preview type based on existing data - if has image, it's image type
+    setPreviewType(proj.image ? "image" : "live");
     setIsFormOpen(true);
   };
 
@@ -135,7 +140,35 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
     setEditingIndex(null);
     setTechInput("");
     setPreviewImage(null);
+    setPreviewType("live");
     reset();
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        setValue("image", data.url);
+        setPreviewImage(data.url);
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const addTech = () => {
@@ -407,38 +440,6 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
                       {...register("description")}
                     />
 
-                    {/* Live Preview Section */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">Project Preview</label>
-                      
-                      {/* Live Website Preview (iframe) */}
-                      {liveUrl ? (
-                        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
-                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground z-0">
-                            <Loader2 className="h-6 w-6 animate-spin" />
-                          </div>
-                          <iframe
-                            src={liveUrl}
-                            title="Website Preview"
-                            className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10"
-                            sandbox="allow-scripts allow-same-origin"
-                            loading="lazy"
-                          />
-                          <div className="absolute bottom-2 right-2 z-20">
-                            <span className="text-xs bg-primary/80 text-white px-2 py-1 rounded">
-                              Live Preview
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="aspect-video rounded-lg bg-muted border flex items-center justify-center">
-                          <div className="text-center text-muted-foreground">
-                            <ExternalLink className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Enter Live URL to see preview</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                     {/* Technologies */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Technologies</label>
@@ -481,16 +482,141 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
 
                     <div className="grid grid-cols-2 gap-4">
                       <InputField
-                        label="Live URL"
-                        placeholder="https://myproject.com"
-                        {...register("liveUrl")}
-                      />
-                      <InputField
                         label="GitHub URL"
                         placeholder="https://github.com/..."
                         {...register("githubUrl")}
                       />
+                      {previewType === "image" && (
+                        <InputField
+                          label="Project Link (Optional)"
+                          placeholder="https://myproject.com"
+                          {...register("liveUrl")}
+                        />
+                      )}
                     </div>
+
+                    {/* Preview Type Selection */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Project Preview</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewType("live");
+                            setValue("image", "");
+                            setPreviewImage(null);
+                          }}
+                          className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-colors ${
+                            previewType === "live"
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-input hover:bg-muted"
+                          }`}
+                        >
+                          <ExternalLink className="h-4 w-4 inline mr-2" />
+                          Live URL
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewType("image");
+                            setValue("liveUrl", "");
+                          }}
+                          className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-colors ${
+                            previewType === "image"
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-input hover:bg-muted"
+                          }`}
+                        >
+                          <ImageIcon className="h-4 w-4 inline mr-2" />
+                          Image
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview Content based on type */}
+                    {previewType === "live" ? (
+                      <div className="space-y-3">
+                        <InputField
+                          label="Live URL"
+                          placeholder="https://myproject.com"
+                          {...register("liveUrl")}
+                        />
+                        {/* Live Website Preview (iframe) */}
+                        {liveUrl ? (
+                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
+                            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground z-0">
+                              <Loader2 className="h-6 w-6 animate-spin" />
+                            </div>
+                            <iframe
+                              src={liveUrl}
+                              title="Website Preview"
+                              className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10"
+                              sandbox="allow-scripts allow-same-origin"
+                              loading="lazy"
+                            />
+                            <div className="absolute bottom-2 right-2 z-20">
+                              <span className="text-xs bg-primary/80 text-white px-2 py-1 rounded">
+                                Live Preview
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="aspect-video rounded-lg bg-muted border flex items-center justify-center">
+                            <div className="text-center text-muted-foreground">
+                              <ExternalLink className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">Enter Live URL to see preview</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Image Upload */}
+                        {previewImage ? (
+                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
+                            <img
+                              src={previewImage}
+                              alt="Project preview"
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              title="Remove image"
+                              onClick={() => {
+                                setValue("image", "");
+                                setPreviewImage(null);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-white hover:bg-destructive/90"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="aspect-video rounded-lg bg-muted border border-dashed flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                              disabled={isUploadingImage}
+                            />
+                            <div className="text-center text-muted-foreground">
+                              {isUploadingImage ? (
+                                <>
+                                  <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin" />
+                                  <p className="text-sm">Uploading...</p>
+                                </>
+                              ) : (
+                                <>
+                                  <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                  <p className="text-sm">Click to upload image</p>
+                                </>
+                              )}
+                            </div>
+                          </label>
+                        )}
+                      </div>
+                    )}
 
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input

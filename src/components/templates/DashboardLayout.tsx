@@ -13,6 +13,7 @@ import {
   Settings,
   Eye,
   ChevronRight,
+  Award,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const sidebarLinks = [
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/experience", label: "Experience", icon: Briefcase },
   { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
+  { href: "/dashboard/certifications", label: "Certifications", icon: Award },
   { href: "/dashboard/theme", label: "Theme", icon: Palette },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];

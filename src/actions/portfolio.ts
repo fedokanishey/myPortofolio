@@ -5,7 +5,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
 import { User, Portfolio } from "@/models";
 import { portfolioSchema, profileSchema } from "@/lib/validations";
-import type { IPortfolio, IExperience, IProject, IThemeConfig } from "@/models/Portfolio";
+import type { IPortfolio, IExperience, IProject, IThemeConfig, ICertification } from "@/models/Portfolio";
 
 // Helper to get or create user
 async function getOrCreateUser() {
@@ -271,6 +271,58 @@ export async function updateProjects(projects: IProject[]) {
   } catch (error) {
     console.error("Error updating projects:", error);
     return { success: false, error: "Failed to update projects" };
+  }
+}
+
+// Update certifications array
+export async function updateCertifications(certifications: ICertification[]) {
+  try {
+    const user = await getOrCreateUser();
+    await connectDB();
+
+    const portfolio = await Portfolio.findOne({ userId: user._id });
+
+    if (!portfolio) {
+      return { success: false, error: "Portfolio not found" };
+    }
+
+    portfolio.content.certifications = certifications;
+    await portfolio.save();
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/certifications");
+    revalidatePath(`/${portfolio.slug}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating certifications:", error);
+    return { success: false, error: "Failed to update certifications" };
+  }
+}
+
+// Update resume URL
+export async function updateResume(resumeUrl: string) {
+  try {
+    const user = await getOrCreateUser();
+    await connectDB();
+
+    const portfolio = await Portfolio.findOne({ userId: user._id });
+
+    if (!portfolio) {
+      return { success: false, error: "Portfolio not found" };
+    }
+
+    portfolio.content.resume = resumeUrl;
+    await portfolio.save();
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/profile");
+    revalidatePath(`/${portfolio.slug}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating resume:", error);
+    return { success: false, error: "Failed to update resume" };
   }
 }
 

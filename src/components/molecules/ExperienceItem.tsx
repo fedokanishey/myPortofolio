@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Briefcase } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge";
+import { ExpandableText } from "@/components/atoms/ExpandableText";
 import { cn } from "@/lib/utils";
 
 interface ExperienceItemProps {
@@ -69,9 +70,11 @@ export function ExperienceItem({
           )}
         </div>
 
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {description}
-        </p>
+        <ExpandableText 
+          text={description} 
+          maxLength={200}
+          className="text-muted-foreground text-sm leading-relaxed"
+        />
       </div>
     </motion.div>
   );

@@ -28,7 +28,8 @@ export async function uploadImage(
           folder,
           resource_type: "image",
           transformation: [
-            { quality: "auto:good" },
+            { width: 1200, crop: "limit" },
+            { quality: "auto:low" },
             { fetch_format: "auto" },
           ],
         },
@@ -52,6 +53,40 @@ export async function uploadImage(
 
 export async function deleteImage(publicId: string): Promise<void> {
   await cloudinary.uploader.destroy(publicId);
+}
+
+export async function uploadFile(
+  file: File,
+  folder: string = "portfolios/resumes"
+): Promise<{ public_id: string; secure_url: string }> {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  
+  // Generate unique filename
+  const filename = `resume_${Date.now()}`;
+
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder,
+          resource_type: "raw",
+          public_id: filename,
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else if (result) {
+            resolve({
+              public_id: result.public_id,
+              secure_url: result.secure_url,
+            });
+          }
+        }
+      )
+      .end(buffer);
+  });
 }
 
 export function getOptimizedImageUrl(

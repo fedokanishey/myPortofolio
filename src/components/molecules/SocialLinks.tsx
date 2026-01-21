@@ -8,6 +8,8 @@ import {
   Globe,
   Instagram,
   Youtube,
+  Mail,
+  Phone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +19,8 @@ interface SocialLink {
 }
 
 const socialIcons: Record<string, LucideIcon> = {
+  email: Mail,
+  whatsapp: Phone,
   twitter: Twitter,
   github: Github,
   linkedin: Linkedin,
@@ -26,6 +30,8 @@ const socialIcons: Record<string, LucideIcon> = {
 };
 
 const socialColors: Record<string, string> = {
+  email: "hover:text-[#EA4335] hover:bg-[#EA4335]/10",
+  whatsapp: "hover:text-[#25D366] hover:bg-[#25D366]/10",
   twitter: "hover:text-[#1DA1F2] hover:bg-[#1DA1F2]/10",
   github: "hover:text-foreground hover:bg-foreground/10",
   linkedin: "hover:text-[#0A66C2] hover:bg-[#0A66C2]/10",
@@ -63,10 +69,20 @@ export function SocialLinks({
         const Icon = socialIcons[link.platform];
         if (!Icon || !link.url) return null;
 
+        // Build proper href for email and whatsapp
+        let href = link.url;
+        if (link.platform === "email") {
+          href = `mailto:${link.url}`;
+        } else if (link.platform === "whatsapp") {
+          // Remove spaces and special chars for WhatsApp link
+          const phoneNumber = link.url.replace(/[^0-9+]/g, "");
+          href = `https://wa.me/${phoneNumber.replace("+", "")}`;
+        }
+
         return (
           <Link
             key={link.platform}
-            href={link.url}
+            href={href}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(

@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { motion, Variants, TargetAndTransition } from "framer-motion";
+import { motion, Variants, TargetAndTransition, AnimatePresence } from "framer-motion";
+import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail } from "lucide-react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
+import { ExpandableText } from "@/components/atoms/ExpandableText";
 import { SocialLinks } from "@/components/molecules/SocialLinks";
 import { ExperienceItem } from "@/components/molecules/ExperienceItem";
 import { ProjectsGrid } from "@/components/organisms/ProjectsGrid";
+import { CertificationCard } from "@/components/molecules/CertificationCard";
 import type { IPortfolio, ISocialLinks } from "@/models/Portfolio";
 
 // Helper to convert hex to HSL
@@ -62,6 +65,49 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   const user = portfolio.userId;
   const { content, themeConfig } = portfolio;
   const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState("hero");
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+
+  // Track scroll position for active section and scroll-to-top button
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      setShowScrollTop(scrollY > 400);
+
+      // Check if we're at the bottom of the page
+      if (scrollY + windowHeight >= documentHeight - 100) {
+        setActiveSection("contact");
+        return;
+      }
+
+      // Find active section
+      const sections = ["hero", "experience", "projects", "certifications", "contact"];
+      for (const section of sections.reverse()) {
+        const element = document.getElementById(section);
+        if (element && scrollY >= element.offsetTop - 150) {
+          setActiveSection(section);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   React.useEffect(() => {
     if (themeConfig) {
@@ -93,6 +139,25 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   // Use displayName from content if set, otherwise fallback to Clerk user name
   const displayName = (content as { displayName?: string }).displayName || user.name;
 
+  // Navigation items based on available sections
+  const navItems = React.useMemo(() => {
+    const items = [
+      { id: "hero", icon: User, label: "About" },
+    ];
+    if (content.experience && content.experience.length > 0) {
+      items.push({ id: "experience", icon: Briefcase, label: "Experience" });
+    }
+    if (content.projects && content.projects.length > 0) {
+      items.push({ id: "projects", icon: FolderKanban, label: "Projects" });
+    }
+    if (content.certifications && content.certifications.length > 0) {
+      items.push({ id: "certifications", icon: Award, label: "Certifications" });
+    }
+    // Always show contact
+    items.push({ id: "contact", icon: Mail, label: "Contact" });
+    return items;
+  }, [content.experience, content.projects, content.certifications]);
+
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       {/* Animated Background Orbs */}
@@ -121,18 +186,74 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         ))}
       </div>
 
-      {/* Header */}
-      <motion.header
-        className="fixed top-0 right-0 z-50 p-4"
+      {/* Fixed Navigation Bar - Centered with Theme Toggle */}
+      <motion.nav
+        className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
       >
-        <ThemeToggle variant="icon" />
-      </motion.header>
+        <div 
+          className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 rounded-full backdrop-blur-md border border-border/50 shadow-lg"
+          style={{ background: "rgba(var(--background), 0.8)" }}
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="relative p-2 sm:p-3 rounded-full transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                title={item.label}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: primaryColor }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <Icon 
+                  className={`h-4 w-4 sm:h-5 sm:w-5 relative z-10 transition-colors ${
+                    isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                />
+              </motion.button>
+            );
+          })}
+          
+          {/* Divider */}
+          <div className="w-px h-5 sm:h-6 bg-border/50 mx-0.5 sm:mx-1" />
+          
+          {/* Theme Toggle */}
+          <ThemeToggle variant="icon" />
+        </div>
+      </motion.nav>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg border border-border/50 backdrop-blur-md transition-colors hover:bg-muted"
+            style={{ background: `${primaryColor}20` }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ChevronUp className="h-6 w-6" style={{ color: primaryColor }} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="relative pt-24 pb-20 md:pt-40 md:pb-40 overflow-hidden">
+      <section id="hero" className="relative pt-24 pb-20 md:pt-40 md:pb-40 overflow-hidden">
         <div className="container mx-auto px-4">
           <motion.div
             variants={containerVariants}
@@ -168,18 +289,41 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
               {/* Bio */}
               {content.bio && (
-                <motion.p
+                <motion.div
                   variants={itemVariants}
                   className="text-muted-foreground mb-10 leading-relaxed text-lg md:text-xl max-w-2xl mx-auto md:mx-0"
                 >
-                  {content.bio}
-                </motion.p>
+                  <ExpandableText 
+                    text={content.bio}
+                    maxLength={300}
+                  />
+                </motion.div>
               )}
 
               {/* Social Links */}
               {socialLinksArray.length > 0 && (
-                <motion.div variants={itemVariants} className="mb-12">
+                <motion.div variants={itemVariants} className="mb-8">
                   <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center md:justify-start" />
+                </motion.div>
+              )}
+
+              {/* Resume Download */}
+              {content.resume && (
+                <motion.div variants={itemVariants} className="mb-12">
+                  <motion.a
+                    href={`/api/download-resume?url=${encodeURIComponent(content.resume)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                    }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Download className="h-5 w-5" />
+                    Download Resume
+                  </motion.a>
                 </motion.div>
               )}
 
@@ -263,6 +407,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {/* Experience Section */}
       {content.experience && content.experience.length > 0 && (
         <motion.section
+          id="experience"
           className="py-20 bg-muted/30"
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -306,6 +451,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {/* Projects Section */}
       {content.projects && content.projects.length > 0 && (
         <motion.section
+          id="projects"
           className="py-20"
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -325,6 +471,129 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           </div>
         </motion.section>
       )}
+
+      {/* Certifications Section */}
+      {content.certifications && content.certifications.length > 0 && (
+        <motion.section
+          id="certifications"
+          className="py-20 bg-muted/30"
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, type: "spring" }}
+        >
+          <div className="container mx-auto px-4">
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold mb-12 text-center"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              <span style={{ color: primaryColor }}>Certifications</span>
+            </motion.h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {content.certifications.map((cert, index) => (
+                <motion.div
+                  key={cert._id || index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <CertificationCard
+                    title={cert.title}
+                    image={cert.image}
+                    description={cert.description}
+                    technologies={cert.technologies || []}
+                    date={cert.date}
+                    primaryColor={primaryColor}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+      {/* Contact Section */}
+      <motion.section
+        id="contact"
+        className="py-20"
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, type: "spring" }}
+      >
+        <div className="container mx-auto px-4">
+          <motion.h2
+            className="text-3xl md:text-4xl font-bold mb-12 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <span style={{ color: primaryColor }}>Contact Me</span>
+          </motion.h2>
+          
+          <div className="max-w-lg mx-auto text-center space-y-8">
+            {/* Email */}
+            {content.socialLinks?.email && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="space-y-2"
+              >
+                <p className="text-muted-foreground text-sm">Email me at</p>
+                <motion.a
+                  href={`mailto:${content.socialLinks.email}`}
+                  className="text-xl md:text-2xl font-medium hover:underline"
+                  style={{ color: primaryColor }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  {content.socialLinks.email}
+                </motion.a>
+              </motion.div>
+            )}
+
+            {/* WhatsApp */}
+            {content.socialLinks?.whatsapp && content.socialLinks.whatsapp.replace(/[^0-9]/g, "").length > 3 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="space-y-2"
+              >
+                <p className="text-muted-foreground text-sm">WhatsApp</p>
+                <motion.a
+                  href={`https://wa.me/${content.socialLinks.whatsapp.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg font-medium hover:underline"
+                  style={{ color: primaryColor }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  {content.socialLinks.whatsapp}
+                </motion.a>
+              </motion.div>
+            )}
+
+            {/* Social Links */}
+            {socialLinksArray.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="pt-6 border-t border-border/50"
+              >
+                <p className="text-muted-foreground text-sm mb-4">Find me on</p>
+                <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center" />
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </motion.section>
 
       {/* Footer */}
       <motion.footer
