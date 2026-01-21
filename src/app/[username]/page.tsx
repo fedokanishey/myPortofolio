@@ -19,7 +19,7 @@ export async function generateMetadata({
     };
   }
 
-  const displayName = portfolio.content.name || (portfolio.userId as { name: string })?.name || "Portfolio";
+  const displayName = portfolio.content.displayName || (portfolio.userId as { name: string })?.name || "Portfolio";
 
   return {
     title: `${displayName} | Portfolio`,
