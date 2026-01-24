@@ -43,6 +43,22 @@ export interface ISocialLinks {
   youtube?: string;
 }
 
+export interface ISectionVisibility {
+  showExperience: boolean;
+  showProjects: boolean;
+  showCertifications: boolean;
+  showSkills: boolean;
+  showSocialLinks: boolean;
+}
+
+export interface IHiddenItems {
+  experience: string[];  // Array of hidden experience _id
+  projects: string[];    // Array of hidden project _id
+  certifications: string[];  // Array of hidden certification _id
+  skills: string[];      // Array of hidden skill names
+  socialLinks: string[]; // Array of hidden social platform names (e.g., "email", "github")
+}
+
 export interface IThemeConfig {
   primaryColor: string;
   secondaryColor: string;
@@ -69,6 +85,8 @@ export interface IPortfolio extends Document {
   slug: string;
   themeConfig: IThemeConfig;
   content: IContent;
+  sectionVisibility: ISectionVisibility;
+  hiddenItems: IHiddenItems;
   isPublished: boolean;
   views: number;
   createdAt: Date;
@@ -153,6 +171,28 @@ const ContentSchema = new Schema<IContent>(
   { _id: false }
 );
 
+const SectionVisibilitySchema = new Schema<ISectionVisibility>(
+  {
+    showExperience: { type: Boolean, default: true },
+    showProjects: { type: Boolean, default: true },
+    showCertifications: { type: Boolean, default: true },
+    showSkills: { type: Boolean, default: true },
+    showSocialLinks: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+const HiddenItemsSchema = new Schema<IHiddenItems>(
+  {
+    experience: [{ type: String }],
+    projects: [{ type: String }],
+    certifications: [{ type: String }],
+    skills: [{ type: String }],
+    socialLinks: [{ type: String }],
+  },
+  { _id: false }
+);
+
 const PortfolioSchema = new Schema<IPortfolio>(
   {
     userId: {
@@ -171,6 +211,26 @@ const PortfolioSchema = new Schema<IPortfolio>(
     },
     themeConfig: { type: ThemeConfigSchema, default: () => ({}) },
     content: { type: ContentSchema, default: () => ({}) },
+    sectionVisibility: { 
+      type: SectionVisibilitySchema, 
+      default: () => ({
+        showExperience: true,
+        showProjects: true,
+        showCertifications: true,
+        showSkills: true,
+        showSocialLinks: true,
+      })
+    },
+    hiddenItems: {
+      type: HiddenItemsSchema,
+      default: () => ({
+        experience: [],
+        projects: [],
+        certifications: [],
+        skills: [],
+        socialLinks: [],
+      })
+    },
     isPublished: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
   },

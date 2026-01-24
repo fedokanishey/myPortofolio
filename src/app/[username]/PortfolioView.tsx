@@ -10,7 +10,7 @@ import { SocialLinks } from "@/components/molecules/SocialLinks";
 import { ExperienceItem } from "@/components/molecules/ExperienceItem";
 import { ProjectsGrid } from "@/components/organisms/ProjectsGrid";
 import { CertificationCard } from "@/components/molecules/CertificationCard";
-import type { IPortfolio, ISocialLinks } from "@/models/Portfolio";
+import type { IPortfolio, ISocialLinks, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
 // Helper to convert hex to HSL
 function hexToHSL(hex: string): string {
@@ -64,37 +64,60 @@ interface PortfolioViewProps {
 export function PortfolioView({ portfolio }: PortfolioViewProps) {
   const user = portfolio.userId;
   const { content, themeConfig } = portfolio;
+  const sectionVisibility: ISectionVisibility = portfolio.sectionVisibility || {
+    showExperience: true,
+    showProjects: true,
+    showCertifications: true,
+    showSkills: true,
+    showSocialLinks: true,
+  };
+  const hiddenItems: IHiddenItems = portfolio.hiddenItems || {
+    experience: [],
+    projects: [],
+    certifications: [],
+    skills: [],
+    socialLinks: [],
+  };
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState("hero");
   const [showScrollTop, setShowScrollTop] = React.useState(false);
 
-  // Track scroll position for active section and scroll-to-top button
+  // Track scroll position for active section and scroll-to-top button (throttled)
   React.useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
+      if (ticking) return;
       
-      setShowScrollTop(scrollY > 400);
+      ticking = true;
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        setShowScrollTop(scrollY > 400);
 
-      // Check if we're at the bottom of the page
-      if (scrollY + windowHeight >= documentHeight - 100) {
-        setActiveSection("contact");
-        return;
-      }
-
-      // Find active section
-      const sections = ["hero", "experience", "projects", "certifications", "contact"];
-      for (const section of sections.reverse()) {
-        const element = document.getElementById(section);
-        if (element && scrollY >= element.offsetTop - 150) {
-          setActiveSection(section);
-          break;
+        // Check if we're at the bottom of the page
+        if (scrollY + windowHeight >= documentHeight - 100) {
+          setActiveSection("contact");
+          ticking = false;
+          return;
         }
-      }
+
+        // Find active section
+        const sections = ["hero", "experience", "projects", "certifications", "contact"];
+        for (const section of sections.reverse()) {
+          const element = document.getElementById(section);
+          if (element && scrollY >= element.offsetTop - 150) {
+            setActiveSection(section);
+            break;
+          }
+        }
+        ticking = false;
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -125,8 +148,21 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
     };
   }, [themeConfig]);
 
+  // Filter hidden items
+  const filteredExperience = (content.experience || []).filter(
+    (item, idx) => !hiddenItems.experience.includes(item._id || idx.toString())
+  );
+  const filteredProjects = (content.projects || []).filter(
+    (item, idx) => !hiddenItems.projects.includes(item._id || idx.toString())
+  );
+  const filteredCertifications = (content.certifications || []).filter(
+    (item, idx) => !hiddenItems.certifications.includes(item._id || idx.toString())
+  );
+  const filteredSkills = (content.skills || []).filter(
+    (skill) => !hiddenItems.skills.includes(skill)
+  );
   const socialLinksArray = Object.entries(content.socialLinks || {})
-    .filter(([, url]) => url)
+    .filter(([platform, url]) => url && !hiddenItems.socialLinks.includes(platform))
     .map(([platform, url]) => ({
       platform: platform as keyof ISocialLinks,
       url: url as string,
@@ -139,46 +175,53 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   // Use displayName from content if set, otherwise fallback to Clerk user name
   const displayName = (content as { displayName?: string }).displayName || user.name;
 
-  // Navigation items based on available sections
+  const hasVisibleEmail = !!(content.socialLinks?.email && !hiddenItems.socialLinks.includes("email"));
+  const hasVisibleWhatsApp = !!(content.socialLinks?.whatsapp && !hiddenItems.socialLinks.includes("whatsapp") && content.socialLinks.whatsapp.replace(/[^0-9]/g, "").length > 3);
+  const hasVisibleOtherSocials = socialLinksArray.filter(l => l.platform !== "email" && l.platform !== "whatsapp").length > 0;
+  
+  const showContactSection = sectionVisibility.showSocialLinks && (hasVisibleEmail || hasVisibleWhatsApp || hasVisibleOtherSocials);
+
+  // Navigation items based on available sections (filtering hidden ones)
   const navItems = React.useMemo(() => {
     const items = [
       { id: "hero", icon: User, label: "About" },
     ];
-    if (content.experience && content.experience.length > 0) {
+    if (sectionVisibility.showExperience && filteredExperience.length > 0) {
       items.push({ id: "experience", icon: Briefcase, label: "Experience" });
     }
-    if (content.projects && content.projects.length > 0) {
+    if (sectionVisibility.showProjects && filteredProjects.length > 0) {
       items.push({ id: "projects", icon: FolderKanban, label: "Projects" });
     }
-    if (content.certifications && content.certifications.length > 0) {
+    if (sectionVisibility.showCertifications && filteredCertifications.length > 0) {
       items.push({ id: "certifications", icon: Award, label: "Certifications" });
     }
-    // Always show contact
-    items.push({ id: "contact", icon: Mail, label: "Contact" });
+    if (showContactSection) {
+      items.push({ id: "contact", icon: Mail, label: "Contact" });
+    }
     return items;
-  }, [content.experience, content.projects, content.certifications]);
+  }, [sectionVisibility, filteredExperience, filteredProjects, filteredCertifications]);
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Animated Background Orbs */}
+      {/* Animated Background Orbs - Optimized */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        {[0, 1, 2].map((i) => (
+        {[0, 1].map((i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full blur-3xl"
+            className="absolute rounded-full blur-2xl will-change-transform"
             style={{
-              background: `radial-gradient(circle, ${i % 2 === 0 ? primaryColor : secondaryColor}15, transparent)`,
-              width: `${350 + i * 120}px`,
-              height: `${350 + i * 120}px`,
-              left: `${15 + i * 25}%`,
-              top: `${5 + i * 15}%`,
+              background: `radial-gradient(circle, ${i % 2 === 0 ? primaryColor : secondaryColor}12, transparent)`,
+              width: `${400 + i * 150}px`,
+              height: `${400 + i * 150}px`,
+              left: `${20 + i * 35}%`,
+              top: `${10 + i * 20}%`,
             }}
             animate={{
-              x: [0, 40, 0, -40, 0],
-              y: [0, -30, 40, -20, 0],
+              x: [0, 30, 0, -30, 0],
+              y: [0, -20, 30, -15, 0],
             }}
             transition={{
-              duration: 18 + i * 4,
+              duration: 25 + i * 5,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -301,7 +344,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               )}
 
               {/* Social Links */}
-              {socialLinksArray.length > 0 && (
+              {sectionVisibility.showSocialLinks && socialLinksArray.length > 0 && (
                 <motion.div variants={itemVariants} className="mb-8">
                   <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center md:justify-start" />
                 </motion.div>
@@ -328,9 +371,9 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               )}
 
               {/* Skills with Stagger */}
-              {content.skills && content.skills.length > 0 && (
+              {sectionVisibility.showSkills && filteredSkills.length > 0 && (
                 <motion.div variants={itemVariants} className="flex flex-wrap justify-center md:justify-start gap-3">
-                  {content.skills.map((skill, idx) => (
+                  {filteredSkills.map((skill, idx) => (
                     <motion.span
                       key={skill}
                       initial={{ opacity: 0, scale: 0.5, y: 20 }}
@@ -350,25 +393,22 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               )}
             </div>
 
-            {/* Right Column: Floating Avatar */}
-            <motion.div variants={itemVariants} className="flex-none z-10">
-              <motion.div animate={floatAnimation} className="relative">
-                {/* Outer glow */}
-                <motion.div
-                  animate={pulseAnimation}
-                  className="absolute -inset-8 rounded-full blur-3xl"
-                  style={{ background: `linear-gradient(135deg, ${primaryColor}40, ${secondaryColor}40)` }}
+            {/* Right Column: Floating Avatar - Optimized */}
+            <motion.div variants={itemVariants} className="flex-none z-10 md:self-start">
+              <motion.div animate={floatAnimation} className="relative will-change-transform">
+                {/* Static outer glow - no animation */}
+                <div
+                  className="absolute -inset-6 rounded-full blur-2xl opacity-50"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}30, ${secondaryColor}30)` }}
                 />
                 
-                {/* Rotating gradient ring */}
-                <motion.div
+                {/* Static gradient ring - removed rotation */}
+                <div
                   className="absolute -inset-2 rounded-full"
                   style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                 />
                 
-                {/* Avatar container - INCREASED SIZE */}
+                {/* Avatar container */}
                 <div className="relative w-64 h-64 md:w-[450px] md:h-[450px] rounded-full overflow-hidden border-8 border-background shadow-2xl">
                   {avatarSrc ? (
                     <>
@@ -376,8 +416,8 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                         src={avatarSrc}
                         alt={user.name}
                         fill
-                        className={`object-cover transition-all duration-700 ${
-                          imageLoaded ? "scale-100 blur-0 opacity-100" : "scale-110 blur-md opacity-0"
+                        className={`object-cover transition-opacity duration-500 ${
+                          imageLoaded ? "opacity-100" : "opacity-0"
                         }`}
                         onLoad={() => setImageLoaded(true)}
                         priority
@@ -405,7 +445,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       </section>
 
       {/* Experience Section */}
-      {content.experience && content.experience.length > 0 && (
+      {sectionVisibility.showExperience && filteredExperience.length > 0 && (
         <motion.section
           id="experience"
           className="py-20 bg-muted/30"
@@ -424,7 +464,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               <span style={{ color: primaryColor }}>Experience</span>
             </motion.h2>
             <div className="space-y-0">
-              {content.experience.map((exp, index) => (
+              {filteredExperience.map((exp, index) => (
                 <motion.div
                   key={exp._id || index}
                   initial={{ opacity: 0, x: -40 }}
@@ -449,7 +489,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       )}
 
       {/* Projects Section */}
-      {content.projects && content.projects.length > 0 && (
+      {sectionVisibility.showProjects && filteredProjects.length > 0 && (
         <motion.section
           id="projects"
           className="py-20"
@@ -467,13 +507,13 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             >
               <span style={{ color: primaryColor }}>Projects</span>
             </motion.h2>
-            <ProjectsGrid projects={content.projects} />
+            <ProjectsGrid projects={filteredProjects} />
           </div>
         </motion.section>
       )}
 
       {/* Certifications Section */}
-      {content.certifications && content.certifications.length > 0 && (
+      {sectionVisibility.showCertifications && filteredCertifications.length > 0 && (
         <motion.section
           id="certifications"
           className="py-20 bg-muted/30"
@@ -492,7 +532,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               <span style={{ color: primaryColor }}>Certifications</span>
             </motion.h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-              {content.certifications.map((cert, index) => (
+              {filteredCertifications.map((cert, index) => (
                 <motion.div
                   key={cert._id || index}
                   initial={{ opacity: 0, y: 30 }}
@@ -516,34 +556,35 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       )}
 
       {/* Contact Section */}
-      <motion.section
-        id="contact"
-        className="py-20"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, type: "spring" }}
-      >
-        <div className="container mx-auto px-4">
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold mb-12 text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-          >
-            <span style={{ color: primaryColor }}>Contact Me</span>
-          </motion.h2>
-          
-          <div className="max-w-lg mx-auto text-center space-y-8">
-            {/* Email */}
-            {content.socialLinks?.email && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="space-y-2"
-              >
-                <p className="text-muted-foreground text-sm">Email me at</p>
+      {showContactSection && (
+        <motion.section
+          id="contact"
+          className="py-20"
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, type: "spring" }}
+        >
+          <div className="container mx-auto px-4">
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold mb-12 text-center"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              <span style={{ color: primaryColor }}>Contact Me</span>
+            </motion.h2>
+            
+            <div className="max-w-lg mx-auto text-center space-y-8">
+              {/* Email */}
+              {hasVisibleEmail && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="space-y-2"
+                >
+                  <p className="text-muted-foreground text-sm">Email me at</p>
                 <motion.a
                   href={`mailto:${content.socialLinks.email}`}
                   className="text-xl md:text-2xl font-medium hover:underline"
@@ -556,7 +597,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             )}
 
             {/* WhatsApp */}
-            {content.socialLinks?.whatsapp && content.socialLinks.whatsapp.replace(/[^0-9]/g, "").length > 3 && (
+            {content.socialLinks?.whatsapp && !hiddenItems.socialLinks.includes("whatsapp") && content.socialLinks.whatsapp.replace(/[^0-9]/g, "").length > 3 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -578,22 +619,22 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               </motion.div>
             )}
 
-            {/* Social Links */}
-            {socialLinksArray.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="pt-6 border-t border-border/50"
-              >
-                <p className="text-muted-foreground text-sm mb-4">Find me on</p>
-                <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center" />
-              </motion.div>
-            )}
+              {sectionVisibility.showSocialLinks && socialLinksArray.filter(l => l.platform !== "email" && l.platform !== "whatsapp").length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 }}
+                  className="pt-6 border-t border-border/50"
+                >
+                  <p className="text-muted-foreground text-sm mb-4">Find me on</p>
+                  <SocialLinks links={socialLinksArray.filter(l => l.platform !== "email" && l.platform !== "whatsapp")} iconSize="lg" className="justify-center" />
+                </motion.div>
+              )}
+            </div>
           </div>
-        </div>
-      </motion.section>
+        </motion.section>
+      )}
 
       {/* Footer */}
       <motion.footer

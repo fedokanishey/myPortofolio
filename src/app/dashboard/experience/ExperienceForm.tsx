@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   Briefcase,
   Plus,
@@ -14,6 +14,7 @@ import {
   Save,
   MapPin,
   Calendar,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import {
@@ -160,77 +161,104 @@ export function ExperienceForm({ portfolio }: ExperienceFormProps) {
 
       {/* Experience List */}
       <div className="space-y-4">
-        <AnimatePresence mode="popLayout">
-          {experiences.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No experience yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Add your work experience to showcase your professional journey
-                </p>
-                <Button variant="outline" onClick={openAddForm}>
-                  <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add your first experience
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            experiences.map((exp, index) => (
-              <motion.div
-                key={exp._id || index}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -100 }}
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold">{exp.title}</h3>
-                        <p className="text-primary font-medium">{exp.company}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                          {exp.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {exp.location}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {exp.startDate} - {exp.current ? "Present" : exp.endDate}
-                          </span>
+        {experiences.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No experience yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add your work experience to showcase your professional journey
+              </p>
+              <Button variant="outline" onClick={openAddForm}>
+                <span className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add your first experience
+                </span>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Reorder.Group
+            axis="y"
+            values={experiences}
+            onReorder={async (newOrder) => {
+              setExperiences(newOrder);
+              // Auto-save the new order
+              try {
+                await updateExperience(newOrder);
+                router.refresh();
+              } catch {
+                // Revert on error
+                setExperiences(portfolio?.content?.experience || []);
+              }
+            }}
+            className="space-y-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {experiences.map((exp, index) => (
+                <Reorder.Item
+                  key={exp._id || `exp-${index}`}
+                  value={exp}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  whileDrag={{ 
+                    scale: 1.02, 
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                    cursor: "grabbing"
+                  }}
+                  className="cursor-grab active:cursor-grabbing"
+                >
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-3">
+                        {/* Drag Handle */}
+                        <div className="flex items-center pt-1 text-muted-foreground hover:text-foreground transition-colors">
+                          <GripVertical className="h-5 w-5" />
                         </div>
-                        <p className="text-muted-foreground mt-3 text-sm">
-                          {exp.description}
-                        </p>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold">{exp.title}</h3>
+                          <p className="text-primary font-medium">{exp.company}</p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                            {exp.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {exp.location}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                            </span>
+                          </div>
+                          <p className="text-muted-foreground mt-3 text-sm">
+                            {exp.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditForm(index)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditForm(index)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))
-          )}
-        </AnimatePresence>
+                    </CardContent>
+                  </Card>
+                </Reorder.Item>
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
+        )}
       </div>
 
       {/* Add/Edit Form Modal */}

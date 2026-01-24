@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   Award,
   Plus,
@@ -15,6 +15,7 @@ import {
   Save,
   Calendar,
   Image as ImageIcon,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
@@ -191,30 +192,54 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <AnimatePresence mode="popLayout">
-            {certifications.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8 text-muted-foreground"
-              >
-                <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No certifications yet</p>
-                <p className="text-sm">Add your first certification to showcase your credentials</p>
-              </motion.div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+          {certifications.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Award className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No certifications yet</p>
+              <p className="text-sm">Add your first certification to showcase your credentials</p>
+            </div>
+          ) : (
+            <Reorder.Group
+              axis="y"
+              values={certifications}
+              onReorder={async (newOrder) => {
+                setCertifications(newOrder);
+                // Auto-save the new order
+                try {
+                  await updateCertifications(newOrder);
+                  router.refresh();
+                } catch {
+                  // Revert on error
+                  setCertifications(portfolio?.content?.certifications || []);
+                }
+              }}
+              className="space-y-4"
+            >
+              <AnimatePresence mode="popLayout">
                 {certifications.map((cert, index) => (
-                  <motion.div
-                    key={cert._id || index}
-                    layout
+                  <Reorder.Item
+                    key={cert._id || `cert-${index}`}
+                    value={cert}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
+                    whileDrag={{ 
+                      scale: 1.02, 
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                      cursor: "grabbing"
+                    }}
+                    className="cursor-grab active:cursor-grabbing"
                   >
                     <Card>
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          {/* Drag Handle with Order Number */}
+                          <div className="flex flex-col items-center gap-1 pt-1">
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                          </div>
                           <div className="flex-1">
                             <h3 className="font-semibold">{cert.title}</h3>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
@@ -258,11 +283,11 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </Reorder.Item>
                 ))}
-              </div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
+            </Reorder.Group>
+          )}
         </CardContent>
       </Card>
 

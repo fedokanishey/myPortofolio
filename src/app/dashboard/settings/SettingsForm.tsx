@@ -10,6 +10,13 @@ import {
   Download,
   AlertTriangle,
   ExternalLink,
+  LayoutGrid,
+  Briefcase,
+  FolderKanban,
+  Award,
+  Lightbulb,
+  Share2,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import {
@@ -19,8 +26,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/molecules/Card";
-import { togglePublish, deletePortfolio } from "@/actions/portfolio";
-import type { IPortfolio } from "@/models/Portfolio";
+import { togglePublish, deletePortfolio, updateSectionVisibility, updateHiddenItems } from "@/actions/portfolio";
+import type { IPortfolio, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
 interface SettingsFormProps {
   portfolio: IPortfolio | null;
@@ -30,6 +37,92 @@ export function SettingsForm({ portfolio }: SettingsFormProps) {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [visibility, setVisibility] = React.useState<ISectionVisibility>(
+    portfolio?.sectionVisibility || {
+      showExperience: true,
+      showProjects: true,
+      showCertifications: true,
+      showSkills: true,
+      showSocialLinks: true,
+    }
+  );
+  const [hiddenItems, setHiddenItems] = React.useState<IHiddenItems>(
+    portfolio?.hiddenItems || {
+      experience: [],
+      projects: [],
+      certifications: [],
+      skills: [],
+      socialLinks: [],
+    }
+  );
+  const [isSavingVisibility, setIsSavingVisibility] = React.useState(false);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+
+  const toggleExpand = (key: string) => {
+    setExpanded(expanded === key ? null : key);
+  };
+
+  const handleToggleItemVisibility = async (section: keyof IHiddenItems, itemId: string) => {
+    const sectionItems = hiddenItems[section] || [];
+    const newSectionItems = sectionItems.includes(itemId)
+      ? sectionItems.filter(id => id !== itemId)
+      : [...sectionItems, itemId];
+    
+    const newHiddenItems = {
+      ...hiddenItems,
+      [section]: newSectionItems,
+    };
+
+    setHiddenItems(newHiddenItems);
+    setIsSavingVisibility(true);
+
+    try {
+      const result = await updateHiddenItems(newHiddenItems);
+      if (!result.success) {
+        setHiddenItems(hiddenItems); // Revert
+        alert(result.error);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setHiddenItems(hiddenItems);
+      alert("Failed to update item visibility");
+    } finally {
+      setIsSavingVisibility(false);
+    }
+  };
+
+  // Get social links as array for display
+  const socialLinksData = portfolio?.content?.socialLinks
+    ? Object.entries(portfolio.content.socialLinks)
+        .filter(([, value]) => value && value.trim() !== "")
+        .map(([key, value]) => ({ platform: key, url: value }))
+    : [];
+
+  const handleToggleVisibility = async (key: keyof ISectionVisibility) => {
+    const newVisibility = {
+      ...visibility,
+      [key]: !visibility[key],
+    };
+    setVisibility(newVisibility);
+    setIsSavingVisibility(true);
+    
+    try {
+      const result = await updateSectionVisibility(newVisibility);
+      if (result.success) {
+        router.refresh();
+      } else {
+        // Revert on error
+        setVisibility(visibility);
+        alert(result.error);
+      }
+    } catch {
+      setVisibility(visibility);
+      alert("Failed to update visibility settings");
+    } finally {
+      setIsSavingVisibility(false);
+    }
+  };
 
   const handleTogglePublish = async () => {
     setIsPublishing(true);
@@ -165,6 +258,332 @@ export function SettingsForm({ portfolio }: SettingsFormProps) {
                 </span>
               )}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section Visibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5" />
+            Section Visibility
+          </CardTitle>
+          <CardDescription>
+            Choose which sections to show on your public portfolio
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {/* Experience Accordion */}
+            <div className="rounded-lg bg-muted/50 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => toggleExpand("experience")}
+              >
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Experience</p>
+                    <p className="text-sm text-muted-foreground">
+                      {portfolio?.content?.experience?.length || 0} items
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleVisibility("showExperience"); }}
+                    disabled={isSavingVisibility}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      visibility.showExperience ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      visibility.showExperience ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expanded === "experience" ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+              {expanded === "experience" && (
+                <div className="px-3 pb-3 pt-1 border-t border-border/50">
+                  {portfolio?.content?.experience && portfolio.content.experience.length > 0 ? (
+                    <ul className="space-y-2">
+                      {portfolio.content.experience.map((exp, i) => {
+                        const itemId = exp._id || i.toString();
+                        const isHidden = hiddenItems.experience.includes(itemId);
+                        return (
+                          <li key={itemId} className="text-sm p-2 rounded bg-background/50 flex justify-between items-center group">
+                            <div>
+                              <p className={`font-medium ${isHidden ? "text-muted-foreground line-through" : ""}`}>{exp.title}</p>
+                              <p className="text-muted-foreground text-xs">{exp.company}</p>
+                            </div>
+                            <button
+                              onClick={() => handleToggleItemVisibility("experience", itemId)}
+                              className={`p-1.5 rounded-md transition-colors ${
+                                isHidden ? "hover:bg-primary/20 text-muted-foreground" : "hover:bg-primary/10 text-primary"
+                              }`}
+                              title={isHidden ? "Show item" : "Hide item"}
+                            >
+                              {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No experience added</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Projects Accordion */}
+            <div className="rounded-lg bg-muted/50 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => toggleExpand("projects")}
+              >
+                <div className="flex items-center gap-3">
+                  <FolderKanban className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Projects</p>
+                    <p className="text-sm text-muted-foreground">
+                      {portfolio?.content?.projects?.length || 0} items
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleVisibility("showProjects"); }}
+                    disabled={isSavingVisibility}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      visibility.showProjects ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      visibility.showProjects ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expanded === "projects" ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+              {expanded === "projects" && (
+                <div className="px-3 pb-3 pt-1 border-t border-border/50">
+                  {portfolio?.content?.projects && portfolio.content.projects.length > 0 ? (
+                    <ul className="space-y-2">
+                      {portfolio.content.projects.map((proj, i) => {
+                        const itemId = proj._id || i.toString();
+                        const isHidden = hiddenItems.projects.includes(itemId);
+                        return (
+                          <li key={itemId} className="text-sm p-2 rounded bg-background/50 flex justify-between items-center group">
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium truncate ${isHidden ? "text-muted-foreground line-through" : ""}`}>{proj.title}</p>
+                              <p className="text-muted-foreground text-xs line-clamp-1">{proj.description}</p>
+                            </div>
+                            <button
+                              onClick={() => handleToggleItemVisibility("projects", itemId)}
+                              className={`p-1.5 rounded-md transition-colors ${
+                                isHidden ? "hover:bg-primary/20 text-muted-foreground" : "hover:bg-primary/10 text-primary"
+                              }`}
+                              title={isHidden ? "Show item" : "Hide item"}
+                            >
+                              {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No projects added</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Certifications Accordion */}
+            <div className="rounded-lg bg-muted/50 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => toggleExpand("certifications")}
+              >
+                <div className="flex items-center gap-3">
+                  <Award className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Certifications</p>
+                    <p className="text-sm text-muted-foreground">
+                      {portfolio?.content?.certifications?.length || 0} items
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleVisibility("showCertifications"); }}
+                    disabled={isSavingVisibility}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      visibility.showCertifications ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      visibility.showCertifications ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expanded === "certifications" ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+              {expanded === "certifications" && (
+                <div className="px-3 pb-3 pt-1 border-t border-border/50">
+                  {portfolio?.content?.certifications && portfolio.content.certifications.length > 0 ? (
+                    <ul className="space-y-2">
+                      {portfolio.content.certifications.map((cert, i) => {
+                        const itemId = cert._id || i.toString();
+                        const isHidden = hiddenItems.certifications.includes(itemId);
+                        return (
+                          <li key={itemId} className="text-sm p-2 rounded bg-background/50 flex justify-between items-center group">
+                            <div>
+                              <p className={`font-medium ${isHidden ? "text-muted-foreground line-through" : ""}`}>{cert.title}</p>
+                              <p className="text-muted-foreground text-xs">{cert.date}</p>
+                            </div>
+                            <button
+                              onClick={() => handleToggleItemVisibility("certifications", itemId)}
+                              className={`p-1.5 rounded-md transition-colors ${
+                                isHidden ? "hover:bg-primary/20 text-muted-foreground" : "hover:bg-primary/10 text-primary"
+                              }`}
+                              title={isHidden ? "Show item" : "Hide item"}
+                            >
+                              {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No certifications added</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Skills Accordion */}
+            <div className="rounded-lg bg-muted/50 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => toggleExpand("skills")}
+              >
+                <div className="flex items-center gap-3">
+                  <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Skills</p>
+                    <p className="text-sm text-muted-foreground">
+                      {portfolio?.content?.skills?.length || 0} items
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleVisibility("showSkills"); }}
+                    disabled={isSavingVisibility}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      visibility.showSkills ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      visibility.showSkills ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expanded === "skills" ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+              {expanded === "skills" && (
+                <div className="px-3 pb-3 pt-1 border-t border-border/50">
+                  {portfolio?.content?.skills && portfolio.content.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {portfolio.content.skills.map((skill, i) => {
+                        const isHidden = hiddenItems.skills.includes(skill);
+                        return (
+                          <button
+                            key={skill}
+                            onClick={() => handleToggleItemVisibility("skills", skill)}
+                            className={`text-xs px-2 py-1 rounded-full border transition-all flex items-center gap-1.5 ${
+                              isHidden 
+                                ? "bg-muted text-muted-foreground border-border line-through" 
+                                : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                            }`}
+                          >
+                            {skill}
+                            {isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No skills added</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Social Links Accordion */}
+            <div className="rounded-lg bg-muted/50 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => toggleExpand("socialLinks")}
+              >
+                <div className="flex items-center gap-3">
+                  <Share2 className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Social Links</p>
+                    <p className="text-sm text-muted-foreground">
+                      {socialLinksData.length} items
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleVisibility("showSocialLinks"); }}
+                    disabled={isSavingVisibility}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      visibility.showSocialLinks ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      visibility.showSocialLinks ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expanded === "socialLinks" ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+              {expanded === "socialLinks" && (
+                <div className="px-3 pb-3 pt-1 border-t border-border/50">
+                  {socialLinksData.length > 0 ? (
+                    <ul className="space-y-2">
+                      {socialLinksData.map(({ platform, url }) => {
+                        const isHidden = hiddenItems.socialLinks.includes(platform);
+                        return (
+                          <li key={platform} className="text-sm p-2 rounded bg-background/50 flex justify-between items-center">
+                            <div className="flex-1 min-w-0 mr-4">
+                              <span className={`capitalize font-medium block ${isHidden ? "text-muted-foreground line-through" : ""}`}>{platform}</span>
+                              <span className="text-muted-foreground text-xs truncate block">{url}</span>
+                            </div>
+                            <button
+                              onClick={() => handleToggleItemVisibility("socialLinks", platform)}
+                              className={`p-1.5 rounded-md transition-colors shrink-0 ${
+                                isHidden ? "hover:bg-primary/20 text-muted-foreground" : "hover:bg-primary/10 text-primary"
+                              }`}
+                              title={isHidden ? "Show link" : "Hide link"}
+                            >
+                              {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No social links added</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

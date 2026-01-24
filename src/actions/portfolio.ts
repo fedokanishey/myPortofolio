@@ -5,7 +5,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
 import { User, Portfolio } from "@/models";
 import { portfolioSchema, profileSchema } from "@/lib/validations";
-import type { IPortfolio, IExperience, IProject, IThemeConfig, ICertification } from "@/models/Portfolio";
+import type { IPortfolio, IExperience, IProject, IThemeConfig, ICertification, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
 // Helper to get or create user
 async function getOrCreateUser() {
@@ -467,5 +467,57 @@ export async function checkSlugAvailability(slug: string) {
   } catch (error) {
     console.error("Error checking slug:", error);
     return { available: false };
+  }
+}
+
+// Update section visibility settings
+export async function updateSectionVisibility(visibility: ISectionVisibility) {
+  try {
+    const user = await getOrCreateUser();
+    await connectDB();
+
+    const portfolio = await Portfolio.findOneAndUpdate(
+      { userId: user._id },
+      { sectionVisibility: visibility },
+      { new: true }
+    );
+
+    if (!portfolio) {
+      return { success: false, error: "Portfolio not found" };
+    }
+
+    revalidatePath("/dashboard/settings");
+    revalidatePath(`/${portfolio.slug}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating section visibility:", error);
+    return { success: false, error: "Failed to update visibility settings" };
+  }
+}
+
+// Update hidden items
+export async function updateHiddenItems(hiddenItems: IHiddenItems) {
+  try {
+    const user = await getOrCreateUser();
+    await connectDB();
+
+    const portfolio = await Portfolio.findOneAndUpdate(
+      { userId: user._id },
+      { hiddenItems: hiddenItems },
+      { new: true }
+    );
+
+    if (!portfolio) {
+      return { success: false, error: "Portfolio not found" };
+    }
+
+    revalidatePath("/dashboard/settings");
+    revalidatePath(`/${portfolio.slug}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating hidden items:", error);
+    return { success: false, error: "Failed to update item visibility" };
   }
 }

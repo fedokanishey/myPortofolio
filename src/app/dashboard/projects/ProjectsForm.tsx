@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import {
   FolderKanban,
   Plus,
@@ -18,6 +18,7 @@ import {
   Wand2,
   Loader2,
   Image as ImageIcon,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
@@ -269,121 +270,151 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
         </Button>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <AnimatePresence mode="popLayout">
-          {projects.length === 0 ? (
-            <Card className="md:col-span-2">
-              <CardContent className="py-12 text-center">
-                <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No projects yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Add your projects to showcase your skills and work
-                </p>
-                <Button variant="outline" onClick={openAddForm}>
-                  <span className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add your first project
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            projects.map((proj, index) => (
-              <motion.div
-                key={proj._id || index}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <Card className={proj.featured ? "ring-2 ring-primary" : ""}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{proj.title}</h3>
-                          {proj.featured && (
-                            <Badge variant="gradient" className="text-xs">
-                              Featured
-                            </Badge>
-                          )}
+      {/* Projects List */}
+      <div className="space-y-4">
+        {projects.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No projects yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add your projects to showcase your skills and work
+              </p>
+              <Button variant="outline" onClick={openAddForm}>
+                <span className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add your first project
+                </span>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Reorder.Group
+            axis="y"
+            values={projects}
+            onReorder={async (newOrder) => {
+              setProjects(newOrder);
+              // Auto-save the new order
+              try {
+                await updateProjects(newOrder);
+                router.refresh();
+              } catch {
+                // Revert on error
+                setProjects(portfolio?.content?.projects || []);
+              }
+            }}
+            className="space-y-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {projects.map((proj, index) => (
+                <Reorder.Item
+                  key={proj._id || `proj-${index}`}
+                  value={proj}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  whileDrag={{ 
+                    scale: 1.02, 
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                    cursor: "grabbing"
+                  }}
+                  className="cursor-grab active:cursor-grabbing"
+                >
+                  <Card className={proj.featured ? "ring-2 ring-primary" : ""}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-3">
+                        {/* Drag Handle with Order Number */}
+                        <div className="flex flex-col items-center gap-1 pt-1">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold">{proj.title}</h3>
+                            {proj.featured && (
+                              <Badge variant="gradient" className="text-xs">
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {proj.description}
+                          </p>
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {proj.technologies.slice(0, 4).map((tech) => (
+                              <Badge key={tech} variant="secondary" className="text-xs">
+                                {tech}
+                              </Badge>
+                            ))}
+                            {proj.technologies.length > 4 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{proj.technologies.length - 4}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {proj.liveUrl && (
+                              <a
+                                href={proj.liveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Live
+                              </a>
+                            )}
+                            {proj.githubUrl && (
+                              <a
+                                href={proj.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                              >
+                                <Github className="h-3 w-3" />
+                                Code
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleFeatured(index)}
+                            title={proj.featured ? "Remove from featured" : "Mark as featured"}
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                proj.featured ? "fill-primary text-primary" : ""
+                              }`}
+                            />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditForm(index)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleFeatured(index)}
-                          title={proj.featured ? "Remove from featured" : "Mark as featured"}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              proj.featured ? "fill-primary text-primary" : ""
-                            }`}
-                          />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditForm(index)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {proj.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {proj.technologies.slice(0, 4).map((tech) => (
-                        <Badge key={tech} variant="secondary" className="text-xs">
-                          {tech}
-                        </Badge>
-                      ))}
-                      {proj.technologies.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{proj.technologies.length - 4}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {proj.liveUrl && (
-                        <a
-                          href={proj.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline flex items-center gap-1"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Live
-                        </a>
-                      )}
-                      {proj.githubUrl && (
-                        <a
-                          href={proj.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-                        >
-                          <Github className="h-3 w-3" />
-                          Code
-                        </a>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))
-          )}
-        </AnimatePresence>
+                    </CardContent>
+                  </Card>
+                </Reorder.Item>
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
+        )}
       </div>
 
       {/* Add/Edit Form Modal */}
