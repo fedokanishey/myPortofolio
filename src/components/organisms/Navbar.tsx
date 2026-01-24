@@ -3,8 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/atoms/Button";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
@@ -14,7 +12,6 @@ const navLinks: { href: string; label: string }[] = [];
 
 export function Navbar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
@@ -78,44 +75,8 @@ export function Navbar() {
                 }}
               />
             </SignedIn>
-
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </nav>
-
-        {/* Mobile Nav */}
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="md:hidden py-4 border-t border-border"
-          >
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
       </div>
     </header>
   );
