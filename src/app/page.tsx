@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles, Zap, Palette, Share2 } from "lucide-react";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { Button } from "@/components/atoms/Button";
 import { MainLayout } from "@/components/templates/MainLayout";
+import InstallPWA from "@/components/InstallPWA";
 
 const features = [
   {
@@ -76,9 +77,7 @@ export default function HomePage() {
                     </span>
                   </Button>
                 </SignInButton>
-                <Button variant="outline" size="xl">
-                  View Examples
-                </Button>
+                <InstallPWA />
               </SignedOut>
 
               <SignedIn>
