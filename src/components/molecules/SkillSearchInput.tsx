@@ -493,18 +493,20 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
     const cleanColor = color?.replace('#', '');
     const theSvgVariant = variant || "default";
 
-    // If a specific color is requested (like white), Simple Icons is best because it dynamically recolors.
+    // Always prioritize Simple Icons because it strictly returns 404s for missing icons.
+    // theSVG can sometimes return a 200 OK HTTP response with a placeholder image, which breaks the onError fallback chain.
     if (cleanColor) {
       s.push(`https://cdn.simpleicons.org/${slug}/${cleanColor}`);
-      // Fallback to theSVG
-      s.push(`https://thesvg.org/icons/${slug}/${theSvgVariant}.svg`);
-      if (altSlug && altSlug !== slug) s.push(`https://thesvg.org/icons/${altSlug}/${theSvgVariant}.svg`);
     } else {
-      // If no color requested, theSVG has better default colored logos
-      s.push(`https://thesvg.org/icons/${slug}/${theSvgVariant}.svg`);
-      if (altSlug && altSlug !== slug) s.push(`https://thesvg.org/icons/${altSlug}/${theSvgVariant}.svg`);
       s.push(`https://cdn.simpleicons.org/${slug}`);
     }
+    
+    // Fallback to theSVG
+    s.push(`https://thesvg.org/icons/${slug}/${theSvgVariant}.svg`);
+    if (altSlug && altSlug !== slug) {
+      s.push(`https://thesvg.org/icons/${altSlug}/${theSvgVariant}.svg`);
+    }
+    
     return s;
   }, [slug, altSlug, variant, color]);
 
