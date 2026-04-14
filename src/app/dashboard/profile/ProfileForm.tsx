@@ -8,6 +8,7 @@ import { z } from "zod";
 import { User, Link as LinkIcon, Save, Loader2, FileText, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
+import { SkillSearchInput } from "@/components/molecules/SkillSearchInput";
 import {
   Card,
   CardContent,
@@ -107,7 +108,6 @@ export function ProfileForm({ portfolio, clerkName }: ProfileFormProps) {
   const [avatar, setAvatar] = React.useState(portfolio?.content?.avatar || "");
   const [resume, setResume] = React.useState(portfolio?.content?.resume || "");
   const [isUploadingResume, setIsUploadingResume] = React.useState(false);
-  const [skillInput, setSkillInput] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
   const [isCheckingSlug, setIsCheckingSlug] = React.useState(false);
   const resumeInputRef = React.useRef<HTMLInputElement>(null);
@@ -189,12 +189,6 @@ export function ProfileForm({ portfolio, clerkName }: ProfileFormProps) {
     }
   };
 
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setValue("skills", [...skills, skillInput.trim()]);
-      setSkillInput("");
-    }
-  };
 
   const removeSkill = (skill: string) => {
     setValue(
@@ -327,42 +321,19 @@ export function ProfileForm({ portfolio, clerkName }: ProfileFormProps) {
           <CardHeader>
             <CardTitle>Skills</CardTitle>
             <CardDescription>
-              Add your technical skills and expertise
+              Search and select your technical skills
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addSkill();
-                  }
-                }}
-                placeholder="Add a skill and press Enter"
-                className="flex-1 h-10 px-3 rounded-lg border border-input bg-background text-sm"
-              />
-              <Button type="button" variant="secondary" onClick={addSkill}>
-                Add
-              </Button>
-            </div>
-            {skills.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    removable
-                    onRemove={() => removeSkill(skill)}
-                  >
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <SkillSearchInput
+              selectedSkills={skills}
+              onAdd={(skill) => {
+                if (!skills.includes(skill)) {
+                  setValue("skills", [...skills, skill]);
+                }
+              }}
+              onRemove={removeSkill}
+            />
           </CardContent>
         </Card>
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Award, Calendar, X, ZoomIn, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge";
+import { SkillIcon } from "@/components/molecules/SkillSearchInput";
 import { ExpandableText } from "@/components/atoms/ExpandableText";
 import { cn } from "@/lib/utils";
 
@@ -19,17 +20,18 @@ function TechnologiesRow({ technologies, primaryColor }: { technologies: string[
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {visibleTechs.map((tech) => (
-        <Badge
-          key={tech}
-          variant="secondary"
-          className="text-xs"
-          style={{
-            background: `${primaryColor}15`,
-            color: primaryColor,
-          }}
-        >
-          {tech}
-        </Badge>
+          <Badge
+            key={tech}
+            variant="secondary"
+            className="text-xs flex items-center gap-1"
+            style={{
+              background: `${primaryColor}15`,
+              color: primaryColor,
+            }}
+          >
+            <SkillIcon name={tech} size={11} color={primaryColor} />
+            {tech}
+          </Badge>
       ))}
       {hasMore && !expanded && (
         <button

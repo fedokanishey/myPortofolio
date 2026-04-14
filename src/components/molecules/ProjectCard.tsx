@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ExternalLink, Github, FolderKanban } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge";
+import { SkillIcon } from "@/components/molecules/SkillSearchInput";
 import { Button } from "@/components/atoms/Button";
 import { Card } from "./Card";
 import { cn } from "@/lib/utils";
@@ -141,9 +142,10 @@ export function ProjectCard({
           {techs.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
               {visibleTechs.map((tech) => (
-                <Badge key={tech} variant="secondary">
-                  {tech}
-                </Badge>
+                  <Badge key={tech} variant="secondary" className="flex items-center gap-1.5">
+                    <SkillIcon name={tech} size={12} />
+                    {tech}
+                  </Badge>
               ))}
               {hasMoreTechs && !techsExpanded && (
                 <button

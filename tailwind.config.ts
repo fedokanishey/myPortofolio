@@ -41,8 +41,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
-        mono: ["var(--font-geist-mono)"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
+        caveat: ["var(--font-caveat)", "cursive"],
       },
       borderRadius: {
         lg: "var(--radius)",

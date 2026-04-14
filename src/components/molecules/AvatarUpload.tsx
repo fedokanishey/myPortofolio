@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Camera, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/Button";
+import { ImageCropModal } from "@/components/molecules/ImageCropModal";
 
 interface AvatarUploadProps {
   value?: string;
@@ -28,6 +29,8 @@ export function AvatarUpload({
 }: AvatarUploadProps) {
   const [isUploading, setIsUploading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [cropSrc, setCropSrc] = React.useState<string | null>(null);
+  const [originalFile, setOriginalFile] = React.useState<File | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,11 +38,26 @@ export function AvatarUpload({
     if (!file) return;
 
     setError(null);
+    setOriginalFile(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (blob: Blob) => {
+    setCropSrc(null);
     setIsUploading(true);
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", new File([blob], originalFile?.name || "avatar.webp", { type: blob.type }));
       formData.append("folder", "avatars");
 
       const response = await fetch("/api/upload", {
@@ -58,10 +76,13 @@ export function AvatarUpload({
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setIsUploading(false);
-      if (inputRef.current) {
-        inputRef.current.value = "";
-      }
+      setOriginalFile(null);
     }
+  };
+
+  const handleCropCancel = () => {
+    setCropSrc(null);
+    setOriginalFile(null);
   };
 
   const handleRemove = () => {
@@ -130,6 +151,15 @@ export function AvatarUpload({
 
       {error && (
         <p className="text-sm text-destructive mt-2 text-center">{error}</p>
+      )}
+
+      {cropSrc && (
+        <ImageCropModal
+          imageSrc={cropSrc}
+          aspectRatio={1} // Avatar uses a 1:1 aspect ratio (circle)
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );

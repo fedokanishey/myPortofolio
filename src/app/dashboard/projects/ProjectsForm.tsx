@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
+import { SkillSearchInput } from "@/components/molecules/SkillSearchInput";
+import { ImageCropModal } from "@/components/molecules/ImageCropModal";
 import {
   Card,
   CardContent,
@@ -50,11 +52,12 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [techInput, setTechInput] = React.useState("");
+
   const [isFetchingPreview, setIsFetchingPreview] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
   const [previewType, setPreviewType] = React.useState<"live" | "image">("live");
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [cropImageSrc, setCropImageSrc] = React.useState<string | null>(null);
 
   const {
     register,
@@ -139,21 +142,32 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingIndex(null);
-    setTechInput("");
+
     setPreviewImage(null);
     setPreviewType("live");
     reset();
   };
 
-  // Handle image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image upload — show crop modal first
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const uploadCroppedImage = async (blob: Blob) => {
+    setCropImageSrc(null);
     setIsUploadingImage(true);
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", blob, "project-image.webp");
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -169,13 +183,6 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
       console.error("Upload failed:", error);
     } finally {
       setIsUploadingImage(false);
-    }
-  };
-
-  const addTech = () => {
-    if (techInput.trim() && !technologies.includes(techInput.trim())) {
-      setValue("technologies", [...technologies, techInput.trim()]);
-      setTechInput("");
     }
   };
 
@@ -474,40 +481,17 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
                     {/* Technologies */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Technologies</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={techInput}
-                          onChange={(e) => setTechInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addTech();
-                            }
-                          }}
-                          placeholder="Add technology"
-                          className="flex-1 h-10 px-3 rounded-lg border border-input bg-background text-sm"
-                        />
-                        <Button type="button" variant="secondary" onClick={addTech}>
-                          Add
-                        </Button>
-                      </div>
+                      <SkillSearchInput
+                        selectedSkills={technologies}
+                        onAdd={(tech) => {
+                          if (!technologies.includes(tech)) {
+                            setValue("technologies", [...technologies, tech]);
+                          }
+                        }}
+                        onRemove={removeTech}
+                      />
                       {errors.technologies?.message && (
                         <p className="text-sm text-destructive">{errors.technologies.message}</p>
-                      )}
-                      {technologies.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {technologies.map((tech) => (
-                            <Badge
-                              key={tech}
-                              variant="secondary"
-                              removable
-                              onRemove={() => removeTech(tech)}
-                            >
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
                       )}
                     </div>
 
@@ -676,6 +660,16 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Image Crop Modal */}
+      {cropImageSrc && (
+        <ImageCropModal
+          imageSrc={cropImageSrc}
+          aspectRatio={16 / 9}
+          onCropComplete={uploadCroppedImage}
+          onCancel={() => setCropImageSrc(null)}
+        />
+      )}
     </div>
   );
 }

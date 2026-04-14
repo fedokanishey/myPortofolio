@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { Badge } from "@/components/atoms/Badge";
+import { SkillSearchInput } from "@/components/molecules/SkillSearchInput";
 import {
   Card,
   CardContent,
@@ -44,7 +45,6 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [techInput, setTechInput] = React.useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const {
@@ -72,7 +72,6 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
       technologies: [],
       date: "",
     });
-    setTechInput("");
     setEditingIndex(null);
     setIsFormOpen(true);
   };
@@ -86,7 +85,6 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
       technologies: cert.technologies || [],
       date: cert.date,
     });
-    setTechInput("");
     setEditingIndex(index);
     setIsFormOpen(true);
   };
@@ -95,14 +93,6 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
     setIsFormOpen(false);
     setEditingIndex(null);
     reset();
-    setTechInput("");
-  };
-
-  const addTech = () => {
-    if (techInput.trim() && !technologies.includes(techInput.trim())) {
-      setValue("technologies", [...technologies, techInput.trim()]);
-      setTechInput("");
-    }
   };
 
   const removeTech = (tech: string) => {
@@ -406,38 +396,15 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
                       <label className="text-sm font-medium">
                         Technologies <span className="text-destructive">*</span>
                       </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={techInput}
-                          onChange={(e) => setTechInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addTech();
-                            }
-                          }}
-                          placeholder="Add technology and press Enter"
-                          className="flex-1 h-10 px-3 rounded-lg border border-input bg-background text-sm"
-                        />
-                        <Button type="button" variant="secondary" onClick={addTech}>
-                          Add
-                        </Button>
-                      </div>
-                      {technologies.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {technologies.map((tech) => (
-                            <Badge
-                              key={tech}
-                              variant="secondary"
-                              removable
-                              onRemove={() => removeTech(tech)}
-                            >
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      <SkillSearchInput
+                        selectedSkills={technologies}
+                        onAdd={(tech) => {
+                          if (!technologies.includes(tech)) {
+                            setValue("technologies", [...technologies, tech]);
+                          }
+                        }}
+                        onRemove={removeTech}
+                      />
                       {errors.technologies?.message && (
                         <p className="text-sm text-destructive">{errors.technologies.message}</p>
                       )}
