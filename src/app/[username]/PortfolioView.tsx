@@ -349,14 +349,14 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Animated Background Orbs - Optimized */}
+      {/* Animated Background Orbs - Optimized for Mobile (No CSS Blur) */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         {[0, 1].map((i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full blur-2xl will-change-transform"
+            className="absolute rounded-full will-change-transform"
             style={{
-              background: `radial-gradient(circle, ${i % 2 === 0 ? primaryColor : secondaryColor}12, transparent)`,
+              background: `radial-gradient(circle at center, ${i % 2 === 0 ? primaryColor : secondaryColor}15 0%, transparent 70%)`,
               width: `${400 + i * 150}px`,
               height: `${400 + i * 150}px`,
               left: `${20 + i * 35}%`,
@@ -369,7 +369,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             transition={{
               duration: 25 + i * 5,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: "linear",
             }}
           />
         ))}
@@ -561,10 +561,10 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             {/* Right Column: Floating Avatar - Optimized */}
             <motion.div variants={itemVariants} className="flex-none z-10 md:self-start">
               <motion.div animate={floatAnimation} className="relative will-change-transform">
-                {/* Static outer glow - no animation */}
+                {/* Static outer glow - Optimized for Mobile (No CSS Blur) */}
                 <div
-                  className="absolute -inset-6 rounded-full blur-2xl opacity-50"
-                  style={{ background: `linear-gradient(135deg, ${primaryColor}30, ${secondaryColor}30)` }}
+                  className="absolute -inset-10 rounded-full"
+                  style={{ background: `radial-gradient(circle at center, ${primaryColor}30 0%, transparent 60%)` }}
                 />
                 
                 {/* Static gradient ring - removed rotation */}
