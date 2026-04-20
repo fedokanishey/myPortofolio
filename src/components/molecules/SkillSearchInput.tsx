@@ -54,7 +54,7 @@ const ALL_SKILLS: { name: string; slug: string; category: string }[] = [
 
   // ── CSS & Styling ──
   { name: "HTML", slug: "html5", category: "Frontend" },
-  { name: "CSS", slug: "css3", category: "Frontend" },
+  { name: "CSS", slug: "css", category: "Frontend" },
   { name: "Sass", slug: "sass", category: "Frontend" },
   { name: "Less", slug: "less", category: "Frontend" },
   { name: "Tailwind CSS", slug: "tailwindcss", category: "Frontend" },
@@ -500,15 +500,28 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
     } else {
       s.push(`https://cdn.simpleicons.org/${slug}`);
     }
-    
-    // Fallback to theSVG
-    s.push(`https://thesvg.org/icons/${slug}/${theSvgVariant}.svg`);
+
+    // Last fallback: resolve and proxy theSVG icon through our API.
+    // This avoids false-positive 200 responses from placeholder assets.
+    const params = new URLSearchParams({
+      name,
+      slug,
+      variant: theSvgVariant,
+    });
+
     if (altSlug && altSlug !== slug) {
-      s.push(`https://thesvg.org/icons/${altSlug}/${theSvgVariant}.svg`);
+      params.set("altSlug", altSlug);
     }
-    
-    return s;
-  }, [slug, altSlug, variant, color]);
+
+    s.push(`/api/icons/thesvg?${params.toString()}`);
+
+    return Array.from(new Set(s));
+  }, [name, slug, altSlug, variant, color]);
+
+  React.useEffect(() => {
+    setStage(0);
+    setHasFailed(false);
+  }, [name, slug, altSlug, variant, color]);
 
   const handleError = () => {
     if (stage < sources.length - 1) {
