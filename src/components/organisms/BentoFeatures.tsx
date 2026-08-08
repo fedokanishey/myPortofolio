@@ -62,7 +62,7 @@ export const BentoFeatures = () => {
   );
 
   return (
-    <section id="features" ref={containerRef} className="py-28 md:py-36 relative bg-background dark:bg-[#07090e] transition-colors duration-300">
+    <section id="features" ref={containerRef} className="py-28 md:py-36 relative bg-background dark:bg-[#07090e]">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">

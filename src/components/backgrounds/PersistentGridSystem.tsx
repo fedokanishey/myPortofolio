@@ -15,7 +15,7 @@ export function PersistentGridSystem({ primaryColor = "#6366F1" }: PersistentGri
     >
       {/* Panning Engineering Dot & Line Matrix */}
       <div
-        className="absolute -inset-20 w-[140%] h-[140%] animate-grid-drift will-change-transform"
+        className="absolute -inset-20 w-[140%] h-[140%] animate-grid-drift"
         style={{
           backgroundImage: `
             radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.14) 1.2px, transparent 0),
@@ -23,7 +23,6 @@ export function PersistentGridSystem({ primaryColor = "#6366F1" }: PersistentGri
             linear-gradient(to bottom, hsl(var(--foreground) / 0.035) 1px, transparent 1px)
           `,
           backgroundSize: "32px 32px, 64px 64px, 64px 64px",
-          transform: "translate3d(0,0,0)",
         }}
       />
 

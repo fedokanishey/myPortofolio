@@ -71,7 +71,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground selection:bg-indigo-500/30 selection:text-foreground transition-colors duration-300`}>
+        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground selection:bg-indigo-500/30 selection:text-foreground`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

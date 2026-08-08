@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { motion, Variants, TargetAndTransition, AnimatePresence } from "framer-motion";
+import { motion, Variants, AnimatePresence } from "framer-motion";
 import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail, FileText, ArrowUpRight } from "lucide-react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { ExpandableText } from "@/components/atoms/ExpandableText";
@@ -57,18 +57,7 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 12 } }
 };
 
-const floatAnimation: TargetAndTransition = {
-  y: [-8, 8, -8],
-  transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-};
-
-const pulseAnimation: TargetAndTransition = {
-  scale: [1, 1.05, 1],
-  opacity: [0.6, 0.9, 0.6],
-  transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-};
-
-// Clean, modern section entrances without unnatural 3D rotations
+// Clean, modern section entrances — single observer per section
 const sectionEntrance: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -78,25 +67,39 @@ const sectionEntrance: Variants = {
   },
 };
 
-// Animated divider between sections
+// Section with staggered children — single observer controls all cards
+const staggeredSection: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+// Static card variant — used by all cards (no per-render object creation)
+const cardVariant: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+// Simple CSS-only divider (no IntersectionObserver)
 function SectionDivider({ color }: { color: string }) {
   return (
     <div className="relative py-4 flex items-center justify-center overflow-hidden">
-      <motion.div
-        className="h-px rounded-full"
+      <div
+        className="h-px rounded-full w-[60%]"
         style={{ background: `linear-gradient(90deg, transparent, ${color}50, transparent)` }}
-        initial={{ width: "0%" }}
-        whileInView={{ width: "60%" }}
-        viewport={{ once: true }}
-        transition={{ duration: 1, ease: "easeOut" }}
       />
-      <motion.div
+      <div
         className="absolute w-2 h-2 rounded-full"
         style={{ background: color, boxShadow: `0 0 12px ${color}80` }}
-        initial={{ opacity: 0, scale: 0 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.4, duration: 0.3, type: "spring", stiffness: 200 }}
       />
     </div>
   );
@@ -114,23 +117,6 @@ const headingVariants: Variants = {
     transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
   },
 };
-
-// Clean staggered card entrance
-const cardItemVariants = (index: number): Variants => ({
-  hidden: {
-    opacity: 0,
-    y: 25,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: index * 0.08,
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-});
 
 interface PortfolioViewProps {
   portfolio: IPortfolio & { userId: { name: string; image?: string } };
@@ -514,7 +500,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
             {/* Right Column: Floating Avatar - Elevated & Enlarged */}
             <motion.div variants={itemVariants} className="flex-none z-10 lg:self-start lg:pt-1">
-              <motion.div animate={floatAnimation} className="relative will-change-transform">
+              <div className="relative">
                 {/* Static outer glow */}
                 <div
                   className="absolute -inset-10 rounded-full"
@@ -557,7 +543,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -573,7 +559,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <motion.section
           id="experience"
           className="py-20 relative z-10"
-          variants={sectionEntrance}
+          variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -581,10 +567,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4 max-w-3xl">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              variants={headingVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+              variants={cardVariant}
             >
               <span style={{ color: primaryColor }}>Experience</span>
             </motion.h2>
@@ -592,10 +575,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               {filteredExperience.map((exp, index) => (
                 <motion.div
                   key={exp._id || index}
-                  variants={cardItemVariants(index)}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
+                  variants={cardVariant}
                 >
                   <ExperienceItem
                     title={exp.title}
@@ -637,15 +617,9 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <ProjectsBlueprintDeco primaryColor={primaryColor} />
 
           <div className="container mx-auto px-4">
-            <motion.h2
-              className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              variants={headingVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
+            <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
               <span style={{ color: primaryColor }}>Projects</span>
-            </motion.h2>
+            </h2>
             <ProjectsGrid
               projects={filteredProjects}
               primaryColor={primaryColor}
@@ -665,7 +639,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <motion.section
           id="certifications"
           className="py-20 relative z-10 overflow-hidden"
-          variants={sectionEntrance}
+          variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -673,10 +647,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              variants={headingVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+              variants={cardVariant}
             >
               <span style={{ color: primaryColor }}>Certifications</span>
             </motion.h2>
@@ -684,10 +655,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
               {filteredCertifications.map((cert, index) => (
                 <motion.div
                   key={cert._id || index}
-                  variants={cardItemVariants(index)}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
+                  variants={cardVariant}
                 >
                   <CertificationCard
                     title={cert.title}

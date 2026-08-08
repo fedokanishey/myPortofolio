@@ -214,7 +214,6 @@ html {
 
 .animate-grid-drift {
   animation: grid-drift 32s ease-in-out infinite;
-  will-change: transform;
 }
 
 /* Continuous Ambient Orbs Drift */
@@ -259,12 +258,10 @@ html {
 
 .animate-orb-primary {
   animation: orb-float-primary 36s ease-in-out infinite, orb-pulse-slow 12s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 
 .animate-orb-secondary {
   animation: orb-float-secondary 42s ease-in-out infinite, orb-pulse-slow 16s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 
 /* SVG Line Dash Flow */
@@ -300,5 +297,31 @@ html {
 /* Film Grain Texture */
 .bg-noise-texture {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+/* Disable all background animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-grid-drift,
+  .animate-orb-primary,
+  .animate-orb-secondary,
+  .animate-dash-flow {
+    animation: none !important;
+  }
+}
+
+/* CSS-only fade-in for card reveals (replaces Framer Motion wrappers) */
+@keyframes css-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.css-card-reveal {
+  animation: css-fade-in-up 0.5s ease-out both;
 }
 

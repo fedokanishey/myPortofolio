@@ -8,7 +8,7 @@ interface FloatingParticlesProps {
 }
 
 export function FloatingParticles({
-  count = 28,
+  count = 12,
   primaryColor = "#6366F1",
 }: FloatingParticlesProps) {
   // Deterministic particle positions for SSR consistency
