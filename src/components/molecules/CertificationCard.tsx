@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Award, Calendar, X, ZoomIn } from "lucide-react";
@@ -114,6 +115,11 @@ export function CertificationCard({
 }: CertificationCardProps) {
   const [imageError, setImageError] = React.useState(false);
   const [showFullImage, setShowFullImage] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on Escape key press
   React.useEffect(() => {
@@ -198,50 +204,58 @@ export function CertificationCard({
         </div>
       </motion.div>
 
-      {/* Full Image Modal with Prominent Close Button */}
-      <AnimatePresence>
-        {showFullImage && image && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-8"
-            onClick={() => setShowFullImage(false)}
-          >
-            {/* Prominent Close Button at top right */}
-            <button
-              type="button"
-              className="absolute top-5 right-5 z-[110] flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/25 text-white font-medium text-sm backdrop-blur-xl border border-white/20 shadow-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowFullImage(false);
-              }}
-            >
-              <X className="h-5 w-5 text-white" />
-              <span>Close (Esc)</span>
-            </button>
+      {/* Full Image Modal with Portal & Elevated Layering Above All UI */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {showFullImage && image && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-3 sm:p-6 md:p-8"
+                onClick={() => setShowFullImage(false)}
+              >
+                {/* Prominent Close Button on top of everything */}
+                <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[100000]">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-zinc-900/90 hover:bg-zinc-800 text-white font-medium text-xs sm:text-sm border border-white/20 shadow-[0_4px_25px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFullImage(false);
+                    }}
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    <span>Close</span>
+                    <span className="hidden sm:inline text-zinc-400 text-xs font-mono">(Esc)</span>
+                  </button>
+                </div>
 
-            {/* Modal Certificate Frame */}
-            <motion.div
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative max-w-5xl max-h-[85vh] w-full h-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-2xl flex items-center justify-center p-2 sm:p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={image}
-                alt={title}
-                fill
-                className="object-contain"
-                quality={100}
-                priority
-              />
-            </motion.div>
-          </motion.div>
+                {/* Modal Certificate Frame */}
+                <motion.div
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.92, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="relative max-w-5xl max-h-[85vh] w-full h-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-2xl flex items-center justify-center p-2 sm:p-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Image
+                    src={image}
+                    alt={title}
+                    fill
+                    className="object-contain"
+                    quality={100}
+                    priority
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </>
   );
 }
