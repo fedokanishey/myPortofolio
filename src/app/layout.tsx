@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
+import { ScrollProgressBar } from "@/components/atoms/ScrollProgressBar";
+import { CursorFollower } from "@/components/atoms/CursorFollower";
 import "./globals.css";
 
 const inter = Inter({
@@ -22,7 +25,7 @@ const caveat = Caveat({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#7C3AED",
+  themeColor: "#6366F1",
 };
 
 export const metadata: Metadata = {
@@ -63,14 +66,18 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased`}>
+        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-[#07090e] text-zinc-100 selection:bg-indigo-500/30 selection:text-white`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SmoothScrollProvider>
+              <ScrollProgressBar />
+              <CursorFollower />
+              {children}
+            </SmoothScrollProvider>
           </ThemeProvider>
         </body>
       </html>

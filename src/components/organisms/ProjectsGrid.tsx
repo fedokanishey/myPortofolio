@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { cn } from "@/lib/utils";
 
@@ -31,11 +30,11 @@ export function ProjectsGrid({ projects, className }: ProjectsGridProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className={cn("bento-grid", className)}
+    <div
+      className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto w-full",
+        className
+      )}
     >
       {projects.map((project, index) => (
         <ProjectCard
@@ -46,9 +45,9 @@ export function ProjectsGrid({ projects, className }: ProjectsGridProps) {
           technologies={project.technologies}
           liveUrl={project.liveUrl}
           githubUrl={project.githubUrl}
-          featured={project.featured}
+          featured={false}
         />
       ))}
-    </motion.div>
+    </div>
   );
 }

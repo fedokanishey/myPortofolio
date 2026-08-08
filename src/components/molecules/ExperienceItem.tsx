@@ -15,6 +15,11 @@ interface ExperienceItemProps {
   endDate?: string;
   current?: boolean;
   description: string;
+  primaryColor?: string;
+  isHovered?: boolean;
+  isAnyHovered?: boolean;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
   className?: string;
 }
 
@@ -26,55 +31,119 @@ export function ExperienceItem({
   endDate,
   current,
   description,
+  primaryColor = "#6366F1",
+  isHovered = false,
+  isAnyHovered = false,
+  onHoverStart,
+  onHoverEnd,
   className,
 }: ExperienceItemProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-      className={cn("relative pl-8 pb-8 last:pb-0", className)}
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+      animate={{
+        opacity: isAnyHovered && !isHovered ? 0.45 : 1,
+        scale: isHovered ? 1.02 : 1,
+        y: isHovered ? -4 : 0,
+      }}
+      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      className={cn(
+        "relative group pl-10 pb-8 last:pb-2 transition-colors duration-300",
+        className
+      )}
     >
-      {/* Timeline line */}
-      <div className="absolute left-[11px] top-2 bottom-0 w-0.5 bg-border last:hidden" />
+      {/* Vertical Timeline Track */}
+      <div 
+        className="absolute left-[15px] top-6 bottom-0 w-0.5 bg-border/60 transition-colors duration-300 group-hover:bg-primary/50"
+        style={{
+          background: isHovered ? `linear-gradient(to bottom, ${primaryColor}, transparent)` : undefined
+        }}
+      />
       
-      {/* Timeline dot */}
-      <div className="absolute left-0 top-2 h-6 w-6 rounded-full border-2 border-primary bg-background flex items-center justify-center">
-        <Briefcase className="h-3 w-3 text-primary" />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h3 className="font-semibold text-lg">{title}</h3>
-            <p className="text-primary font-medium">{company}</p>
-          </div>
-          {current && (
-            <Badge variant="success" className="w-fit">
-              Current
-            </Badge>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            {startDate} - {current ? "Present" : endDate}
-          </span>
-          {location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {location}
-            </span>
-          )}
-        </div>
-
-        <ExpandableText 
-          text={description} 
-          maxLength={200}
-          className="text-muted-foreground text-sm leading-relaxed"
+      {/* Interactive Timeline Node */}
+      <motion.div 
+        animate={{
+          scale: isHovered ? 1.25 : 1,
+          borderColor: isHovered ? primaryColor : "hsl(var(--border))",
+          boxShadow: isHovered ? `0 0 16px ${primaryColor}80` : "none",
+        }}
+        transition={{ duration: 0.25 }}
+        className="absolute left-[5px] top-3 h-6 w-6 rounded-full border-2 bg-card flex items-center justify-center z-10"
+      >
+        <Briefcase 
+          className="h-3 w-3 transition-colors duration-200" 
+          style={{ color: isHovered ? primaryColor : "currentColor" }} 
         />
+      </motion.div>
+
+      {/* Card Content Container */}
+      <div 
+        className={cn(
+          "relative p-5 sm:p-6 rounded-2xl border transition-all duration-300 backdrop-blur-md",
+          isHovered
+            ? "bg-card/95 border-primary/40 shadow-[0_10px_35px_rgba(99,102,241,0.15)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] dark:bg-[#0e1420]/95"
+            : "bg-card/50 border-border/60 hover:border-border"
+        )}
+      >
+        {/* Subtle top ambient line on hover */}
+        {isHovered && (
+          <motion.div 
+            layoutId="expHoverGlow"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${primaryColor}, transparent)`
+            }}
+          />
+        )}
+
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <motion.h3 
+                animate={{ scale: isHovered ? 1.02 : 1 }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  "font-bold text-lg sm:text-xl tracking-tight transition-colors duration-200",
+                  isHovered ? "text-foreground" : "text-foreground/90"
+                )}
+                style={{ color: isHovered ? primaryColor : undefined }}
+              >
+                {title}
+              </motion.h3>
+              <p className="font-semibold text-sm sm:text-base mt-0.5" style={{ color: primaryColor }}>
+                {company}
+              </p>
+            </div>
+            {current && (
+              <Badge variant="success" className="w-fit shadow-sm">
+                Current Role
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Calendar className="h-3.5 w-3.5" style={{ color: isHovered ? primaryColor : undefined }} />
+              <span>{startDate} — {current ? "Present" : endDate}</span>
+            </span>
+            {location && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <MapPin className="h-3.5 w-3.5" style={{ color: isHovered ? primaryColor : undefined }} />
+                <span>{location}</span>
+              </span>
+            )}
+          </div>
+
+          <ExpandableText 
+            text={description} 
+            maxLength={220}
+            className={cn(
+              "text-sm leading-relaxed transition-colors duration-200",
+              isHovered ? "text-foreground/90 font-normal" : "text-muted-foreground"
+            )}
+          />
+        </div>
       </div>
     </motion.div>
   );

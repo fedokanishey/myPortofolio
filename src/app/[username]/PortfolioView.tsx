@@ -3,14 +3,15 @@
 import * as React from "react";
 import Image from "next/image";
 import { motion, Variants, TargetAndTransition, AnimatePresence } from "framer-motion";
-import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail } from "lucide-react";
+import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail, FileText, ArrowUpRight } from "lucide-react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { ExpandableText } from "@/components/atoms/ExpandableText";
 import { SocialLinks } from "@/components/molecules/SocialLinks";
 import { ExperienceItem } from "@/components/molecules/ExperienceItem";
 import { ProjectsGrid } from "@/components/organisms/ProjectsGrid";
 import { CertificationCard } from "@/components/molecules/CertificationCard";
-import { SkillIcon } from "@/components/molecules/SkillSearchInput";
+import { AnimatedSkillsCloud } from "@/components/molecules/AnimatedSkillsCloud";
+import { MagneticButton } from "@/components/atoms/MagneticButton";
 import type { IPortfolio, ISocialLinks, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
 // Helper to convert hex to HSL
@@ -60,36 +61,13 @@ const pulseAnimation: TargetAndTransition = {
   transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
 };
 
-// Unique section entrances — each section has its own feel
-const sectionFromLeft: Variants = {
-  hidden: { opacity: 0, x: -100, rotateY: -8 },
+// Clean, modern section entrances without unnatural 3D rotations
+const sectionEntrance: Variants = {
+  hidden: { opacity: 0, y: 30 },
   visible: {
-    opacity: 1, x: 0, rotateY: 0,
-    transition: { duration: 0.8, type: "spring", stiffness: 50, damping: 15 },
-  },
-};
-
-const sectionFromRight: Variants = {
-  hidden: { opacity: 0, x: 100, rotateY: 8 },
-  visible: {
-    opacity: 1, x: 0, rotateY: 0,
-    transition: { duration: 0.8, type: "spring", stiffness: 50, damping: 15 },
-  },
-};
-
-const sectionScaleUp: Variants = {
-  hidden: { opacity: 0, scale: 0.85, y: 60 },
-  visible: {
-    opacity: 1, scale: 1, y: 0,
-    transition: { duration: 0.7, type: "spring", stiffness: 60, damping: 14 },
-  },
-};
-
-const sectionRiseUp: Variants = {
-  hidden: { opacity: 0, y: 100, rotateX: 10 },
-  visible: {
-    opacity: 1, y: 0, rotateX: 0,
-    transition: { duration: 0.8, type: "spring", stiffness: 55, damping: 16 },
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -111,71 +89,38 @@ function SectionDivider({ color }: { color: string }) {
         initial={{ opacity: 0, scale: 0 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ delay: 0.5, duration: 0.4, type: "spring", stiffness: 200 }}
+        transition={{ delay: 0.4, duration: 0.3, type: "spring", stiffness: 200 }}
       />
     </div>
   );
 }
 
-// 3D heading entrance — flip down
-const heading3DVariants: Variants = {
+// Clean heading entrance
+const headingVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: -30,
-    rotateX: -25,
-    scale: 0.9,
+    y: 20,
   },
   visible: {
     opacity: 1,
     y: 0,
-    rotateX: 0,
-    scale: 1,
-    transition: { duration: 0.7, type: "spring", stiffness: 80, damping: 14 },
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
-// 3D card entrance — subtle rotateY swing
-const card3DVariants = (index: number, fromLeft = true): Variants => ({
+// Clean staggered card entrance
+const cardItemVariants = (index: number): Variants => ({
   hidden: {
     opacity: 0,
-    x: fromLeft ? -50 : 50,
-    rotateY: fromLeft ? -12 : 12,
-    scale: 0.92,
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-    rotateY: 0,
-    scale: 1,
-    transition: {
-      delay: index * 0.12,
-      duration: 0.7,
-      type: "spring",
-      stiffness: 70,
-      damping: 14,
-    },
-  },
-});
-
-// 3D flip-up for certification cards
-const certCard3DVariants = (index: number): Variants => ({
-  hidden: {
-    opacity: 0,
-    y: 50,
-    rotateX: 15,
-    scale: 0.9,
+    y: 25,
   },
   visible: {
     opacity: 1,
     y: 0,
-    rotateX: 0,
-    scale: 1,
     transition: {
-      delay: index * 0.1,
-      duration: 0.6,
-      type: "spring",
-      stiffness: 80,
-      damping: 14,
+      delay: index * 0.08,
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
     },
   },
 });
@@ -207,6 +152,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState("hero");
   const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const [hoveredExpIndex, setHoveredExpIndex] = React.useState<number | null>(null);
 
   // Typewriter effect for name & headline
   const [nameCount, setNameCount] = React.useState(0);
@@ -383,8 +329,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         transition={{ delay: 0.4, duration: 0.5 }}
       >
         <div 
-          className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1.5 sm:py-2 rounded-full backdrop-blur-md border border-border/50 shadow-lg"
-          style={{ background: "rgba(var(--background), 0.8)" }}
+          className="flex items-center gap-0.5 sm:gap-1 px-2 py-1.5 sm:py-2 rounded-full backdrop-blur-xl border border-border/80 dark:border-white/10 shadow-lg bg-card/95 dark:bg-[#0b0f17]/95 text-foreground"
         >
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -416,7 +361,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           })}
           
           {/* Divider */}
-          <div className="w-px h-5 sm:h-6 bg-border/50 mx-0.5 sm:mx-1" />
+          <div className="w-px h-5 sm:h-6 bg-border/80 mx-1" />
           
           {/* Theme Toggle */}
           <ThemeToggle variant="icon" />
@@ -442,144 +387,163 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="hero" className="relative pt-24 pb-20 md:pt-40 md:pb-40 overflow-hidden">
-        <div className="container mx-auto px-4">
+      <section id="hero" className="relative pt-16 sm:pt-20 lg:pt-24 pb-10 overflow-hidden">
+        <div className="container mx-auto px-4 w-full">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col-reverse md:flex-row items-center justify-between gap-12 md:gap-24 max-w-7xl mx-auto"
+            className="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between gap-8 lg:gap-12 max-w-7xl mx-auto w-full pt-2"
           >
             {/* Left Column: Text Content */}
-            <div className="flex-1 text-center md:text-left z-10 w-full">
-              {/* Name with Gradient — Typewriter */}
-              <motion.h1
+            <div className="flex-1 min-w-0 w-full text-center lg:text-left z-10 space-y-4">
+              {/* Status Pill */}
+              <motion.div
                 variants={itemVariants}
-                className="text-4xl md:text-7xl font-bold mb-6 tracking-tight"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 dark:border-white/[0.1] bg-card/80 dark:bg-white/[0.03] backdrop-blur-md shadow-sm"
               >
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-                >
-                  {displayName.slice(0, nameCount)}
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-mono text-muted-foreground dark:text-zinc-300">
+                  Available for new opportunities
                 </span>
-                {!nameFinished && (
-                  <motion.span
-                    className="inline-block w-[3px] h-[0.85em] align-middle ml-0.5 rounded-sm"
-                    style={{ background: primaryColor }}
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
-                  />
-                )}
-              </motion.h1>
+              </motion.div>
 
-              {/* Headline — Typewriter */}
-              {content.headline && (
-                <motion.p
-                  variants={itemVariants}
-                  className="text-2xl md:text-3xl font-medium mb-8"
-                  style={{ color: primaryColor }}
-                >
-                  {headlineText.slice(0, headlineCount)}
-                  {nameFinished && !headlineFinished && (
+              {/* Name with Dynamic High-Contrast Gradient */}
+              <motion.div variants={itemVariants} className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight font-display text-foreground dark:text-white">
+                  <span
+                    className="bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, hsl(var(--foreground)) 20%, ${primaryColor} 70%, ${secondaryColor} 100%)`,
+                    }}
+                  >
+                    {displayName.slice(0, nameCount)}
+                  </span>
+                  {!nameFinished && (
                     <motion.span
-                      className="inline-block w-[2px] h-[0.8em] align-middle ml-0.5 rounded-sm"
+                      className="inline-block w-[4px] h-[0.85em] align-middle ml-1 rounded-sm"
                       style={{ background: primaryColor }}
                       animate={{ opacity: [1, 0] }}
                       transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
                     />
                   )}
-                </motion.p>
-              )}
+                </h1>
+
+                {/* Headline / Role with Frosted Glass Badge */}
+                {content.headline && (
+                  <div className="pt-1">
+                    <span
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm sm:text-base md:text-lg font-semibold border border-border/80 dark:border-white/[0.12] bg-card/90 dark:bg-[#0d121c]/80 backdrop-blur-md shadow-sm"
+                      style={{ color: primaryColor }}
+                    >
+                      <span className="h-2 w-2 rounded-full" style={{ background: primaryColor }} />
+                      <span>{headlineText.slice(0, headlineCount)}</span>
+                      {nameFinished && !headlineFinished && (
+                        <motion.span
+                          className="inline-block w-[2px] h-[0.8em] align-middle ml-0.5 rounded-sm"
+                          style={{ background: primaryColor }}
+                          animate={{ opacity: [1, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
+                        />
+                      )}
+                    </span>
+                  </div>
+                )}
+              </motion.div>
 
               {/* Bio */}
               {content.bio && (
                 <motion.div
                   variants={itemVariants}
-                  className="text-muted-foreground mb-10 leading-relaxed text-lg md:text-xl max-w-2xl mx-auto md:mx-0"
+                  className="text-muted-foreground dark:text-zinc-400 leading-relaxed text-sm sm:text-base max-w-2xl mx-auto lg:mx-0 pt-0.5"
                 >
                   <ExpandableText 
                     text={content.bio}
-                    maxLength={300}
+                    maxLength={260}
                   />
                 </motion.div>
               )}
 
-              {/* Social Links */}
-              {sectionVisibility.showSocialLinks && socialLinksArray.length > 0 && (
-                <motion.div variants={itemVariants} className="mb-8">
-                  <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center md:justify-start" />
-                </motion.div>
-              )}
+              {/* Social Links & Action Row */}
+              <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-1">
+                {/* Premium Resume Download with Magnetic Button */}
+                {content.resume && (
+                  <MagneticButton strength={25}>
+                    <motion.a
+                      href={`/api/download-resume?url=${encodeURIComponent(content.resume)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative group inline-flex items-center gap-2.5 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full text-xs sm:text-sm font-semibold text-white overflow-hidden transition-all duration-300 shadow-[0_4px_20px_rgba(99,102,241,0.25)] hover:shadow-[0_8px_30px_rgba(99,102,241,0.45)] border border-white/20"
+                      style={{
+                        background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                      }}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                    >
+                      {/* Ambient hover glow */}
+                      <div 
+                        className="absolute -inset-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
+                        style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+                      />
+                      
+                      {/* Inner ambient top highlight */}
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 via-transparent to-black/10 pointer-events-none" />
 
-              {/* Resume Download */}
-              {content.resume && (
-                <motion.div variants={itemVariants} className="mb-12">
-                  <motion.a
-                    href={`/api/download-resume?url=${encodeURIComponent(content.resume)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
-                    style={{
-                      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                    }}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Download className="h-5 w-5" />
-                    Download Resume
-                  </motion.a>
-                </motion.div>
-              )}
+                      {/* Icon badge */}
+                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:bg-white/30">
+                        <FileText className="h-3.5 w-3.5 text-white" />
+                      </span>
 
-              {/* Skills with Icons & Caveat Font */}
+                      <span className="tracking-wide font-medium">Download Resume</span>
+
+                      {/* Action indicator */}
+                      <ArrowUpRight className="h-4 w-4 text-white/80 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-white" />
+                    </motion.a>
+                  </MagneticButton>
+                )}
+
+                {/* Social Links */}
+                {sectionVisibility.showSocialLinks && socialLinksArray.length > 0 && (
+                  <div className="flex items-center">
+                    <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center lg:justify-start" />
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Animated Floating Skills Cloud */}
               {sectionVisibility.showSkills && filteredSkills.length > 0 && (
-                <motion.div variants={itemVariants} className="flex flex-wrap justify-center md:justify-start gap-3">
-                  {filteredSkills.map((skill, idx) => (
-                      <motion.span
-                        key={skill}
-                        initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ delay: 0.6 + idx * 0.08, type: "spring", stiffness: 200, damping: 15 }}
-                        whileHover={{ scale: 1.05, y: -3, transition: { type: "spring", stiffness: 500, damping: 20 } }}
-                        className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-white cursor-default shadow-lg backdrop-blur-sm"
-                        style={{
-                          background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                          boxShadow: `0 4px 20px ${primaryColor}40`,
-                        }}
-                      >
-                        <SkillIcon name={skill} size={18} color="ffffff" />
-                        <span className="font-caveat text-lg font-semibold">
-                          {skill}
-                        </span>
-                      </motion.span>
-                  ))}
+                <motion.div variants={itemVariants} className="pt-3 w-full max-w-full overflow-hidden">
+                  <AnimatedSkillsCloud
+                    skills={filteredSkills}
+                    primaryColor={primaryColor}
+                    secondaryColor={secondaryColor}
+                  />
                 </motion.div>
               )}
             </div>
 
-            {/* Right Column: Floating Avatar - Optimized */}
-            <motion.div variants={itemVariants} className="flex-none z-10 md:self-start">
+            {/* Right Column: Floating Avatar - Elevated & Enlarged */}
+            <motion.div variants={itemVariants} className="flex-none z-10 lg:self-start lg:pt-1">
               <motion.div animate={floatAnimation} className="relative will-change-transform">
-                {/* Static outer glow - Optimized for Mobile (No CSS Blur) */}
+                {/* Static outer glow */}
                 <div
                   className="absolute -inset-10 rounded-full"
-                  style={{ background: `radial-gradient(circle at center, ${primaryColor}30 0%, transparent 60%)` }}
+                  style={{ background: `radial-gradient(circle at center, ${primaryColor}25 0%, transparent 65%)` }}
                 />
                 
-                {/* Static gradient ring - removed rotation */}
+                {/* Static gradient ring */}
                 <div
                   className="absolute -inset-2 rounded-full"
                   style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
                 />
                 
                 {/* Avatar container */}
-                <div className="relative w-64 h-64 md:w-[450px] md:h-[450px] rounded-full overflow-hidden border-8 border-background shadow-2xl">
+                <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] xl:w-[420px] xl:h-[420px] rounded-full overflow-hidden border-4 sm:border-8 border-background shadow-2xl bg-card">
                   {avatarSrc ? (
                     <>
                       <Image
                         src={avatarSrc}
-                        alt={user.name}
+                        alt={user.name || displayName}
                         fill
                         className={`object-cover transition-opacity duration-500 ${
                           imageLoaded ? "opacity-100" : "opacity-0"
@@ -614,13 +578,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <SectionDivider color={primaryColor} />
       )}
 
-      {/* Experience Section — slides from left */}
+      {/* Experience Section */}
       {sectionVisibility.showExperience && filteredExperience.length > 0 && (
         <motion.section
           id="experience"
           className="py-20 bg-muted/30"
-          style={{ perspective: "1200px" }}
-          variants={sectionFromLeft}
+          variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -628,24 +591,21 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4 max-w-3xl">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              style={{ perspective: "800px" }}
-              variants={heading3DVariants}
+              variants={headingVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
             >
               <span style={{ color: primaryColor }}>Experience</span>
             </motion.h2>
-            <div className="space-y-0" style={{ perspective: "1000px" }}>
+            <div className="space-y-2">
               {filteredExperience.map((exp, index) => (
                 <motion.div
                   key={exp._id || index}
-                  style={{ transformStyle: "preserve-3d" }}
-                  variants={card3DVariants(index, true)}
+                  variants={cardItemVariants(index)}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  whileHover={{ rotateY: 3, scale: 1.02, transition: { duration: 0.3 } }}
                 >
                   <ExperienceItem
                     title={exp.title}
@@ -655,6 +615,11 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                     endDate={exp.endDate}
                     current={exp.current}
                     description={exp.description}
+                    primaryColor={primaryColor}
+                    isHovered={hoveredExpIndex === index}
+                    isAnyHovered={hoveredExpIndex !== null}
+                    onHoverStart={() => setHoveredExpIndex(index)}
+                    onHoverEnd={() => setHoveredExpIndex(null)}
                   />
                 </motion.div>
               ))}
@@ -668,13 +633,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <SectionDivider color={secondaryColor} />
       )}
 
-      {/* Projects Section — slides from right */}
+      {/* Projects Section */}
       {sectionVisibility.showProjects && filteredProjects.length > 0 && (
         <motion.section
           id="projects"
           className="py-20"
-          style={{ perspective: "1200px" }}
-          variants={sectionFromRight}
+          variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -682,8 +646,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              style={{ perspective: "800px" }}
-              variants={heading3DVariants}
+              variants={headingVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -700,13 +663,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <SectionDivider color={primaryColor} />
       )}
 
-      {/* Certifications Section — scales up from center */}
+      {/* Certifications Section */}
       {sectionVisibility.showCertifications && filteredCertifications.length > 0 && (
         <motion.section
           id="certifications"
           className="py-20 bg-muted/30"
-          style={{ perspective: "1200px" }}
-          variants={sectionScaleUp}
+          variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -714,24 +676,21 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              style={{ perspective: "800px" }}
-              variants={heading3DVariants}
+              variants={headingVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
             >
               <span style={{ color: primaryColor }}>Certifications</span>
             </motion.h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto" style={{ perspective: "1000px" }}>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
               {filteredCertifications.map((cert, index) => (
                 <motion.div
                   key={cert._id || index}
-                  style={{ transformStyle: "preserve-3d" }}
-                  variants={certCard3DVariants(index)}
+                  variants={cardItemVariants(index)}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  whileHover={{ rotateX: -5, rotateY: 5, scale: 1.04, transition: { duration: 0.3 } }}
                 >
                   <CertificationCard
                     title={cert.title}
@@ -753,13 +712,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <SectionDivider color={secondaryColor} />
       )}
 
-      {/* Contact Section — rises up with bounce */}
+      {/* Contact Section */}
       {showContactSection && (
         <motion.section
           id="contact"
           className="py-20"
-          style={{ perspective: "1200px" }}
-          variants={sectionRiseUp}
+          variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
@@ -767,8 +725,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           <div className="container mx-auto px-4">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
-              style={{ perspective: "800px" }}
-              variants={heading3DVariants}
+              variants={headingVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}

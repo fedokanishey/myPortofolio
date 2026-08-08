@@ -1,3 +1,9 @@
 export { Navbar } from "./Navbar";
 export { Footer } from "./Footer";
 export { ProjectsGrid } from "./ProjectsGrid";
+export { HeroSection } from "./HeroSection";
+export { SocialProof } from "./SocialProof";
+export { BentoFeatures } from "./BentoFeatures";
+export { WorkflowTimeline } from "./WorkflowTimeline";
+export { MetricsSection } from "./MetricsSection";
+export { FinalCta } from "./FinalCta";
