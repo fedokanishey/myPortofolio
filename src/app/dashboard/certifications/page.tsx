@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { getMyPortfolio } from "@/actions/portfolio";
 import { CertificationsForm } from "./CertificationsForm";
 
@@ -18,9 +17,5 @@ export default async function CertificationsPage() {
 
   const portfolio = await getMyPortfolio();
 
-  return (
-    <DashboardLayout slug={portfolio?.slug}>
-      <CertificationsForm portfolio={portfolio} />
-    </DashboardLayout>
-  );
+  return <CertificationsForm portfolio={portfolio} />;
 }

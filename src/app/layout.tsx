@@ -48,6 +48,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "PortfolioBuilder",
   },
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/icons/icon-192x192.png",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -66,7 +71,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-[#07090e] text-zinc-100 selection:bg-indigo-500/30 selection:text-white`}>
+        <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground selection:bg-indigo-500/30 selection:text-foreground transition-colors duration-300`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

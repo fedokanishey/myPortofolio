@@ -13,10 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
-import {
-  Card,
-  CardContent,
-} from "@/components/molecules/Card";
+import { AnimatedCounter } from "@/components/atoms/AnimatedCounter";
 import { togglePublish } from "@/actions/portfolio";
 import { ProfileForm } from "./profile/ProfileForm";
 import type { IPortfolio } from "@/models/Portfolio";
@@ -72,24 +69,25 @@ export function DashboardContent({ portfolio, clerkName }: DashboardContentProps
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage your portfolio and track your progress
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Manage your portfolio, track impressions, and customize your live showcase
           </p>
         </div>
         <div className="flex items-center gap-3">
           {portfolio?.slug && (
-            <Button variant="outline" asChild>
+            <Button variant="outline" className="rounded-xl" asChild>
               <Link href={`/${portfolio.slug}`} target="_blank">
                 <span className="flex items-center">
                   <Eye className="h-4 w-4 mr-2" />
-                  Preview
+                  Preview Live
                 </span>
               </Link>
             </Button>
           )}
           <Button
             variant={portfolio?.isPublished ? "secondary" : "gradient"}
+            className="rounded-xl"
             onClick={handleTogglePublish}
             isLoading={isPublishing}
           >
@@ -101,50 +99,54 @@ export function DashboardContent({ portfolio, clerkName }: DashboardContentProps
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Publish
+                Publish Portfolio
               </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* Status Banner */}
+      {/* Status Banner for new portfolios */}
       {!portfolio && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-lg bg-primary/10 border border-primary/20"
+          className="p-4 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-md"
         >
           <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Sparkles className="h-5 w-5 text-primary shrink-0" />
             <p className="text-sm">
-              <span className="font-medium">Welcome!</span> Start by filling
-              out your profile information below to create your portfolio.
+              <span className="font-semibold text-foreground">Welcome!</span> Start by filling
+              out your profile information below to generate and publish your portfolio.
             </p>
           </div>
         </motion.div>
       )}
 
-      {/* Stats Grid */}
+      {/* Stats Grid with Animated Numbers & Glass Surface */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.08, duration: 0.4 }}
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
           >
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                  </div>
-                  <stat.icon className={`h-8 w-8 ${stat.color} opacity-80`} />
+            <div className="relative p-5 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80 dark:bg-[#0c1017]/80 backdrop-blur-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 dark:via-white/10 to-transparent" />
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                    <AnimatedCounter end={stat.value} duration={1.2} />
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="p-3 rounded-xl bg-muted/50 dark:bg-white/[0.04] border border-border/50">
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -155,51 +157,57 @@ export function DashboardContent({ portfolio, clerkName }: DashboardContentProps
       {/* Quick Links */}
       <div className="grid gap-4 md:grid-cols-3">
         <Link href="/dashboard/experience">
-          <Card hover="lift" className="cursor-pointer h-full">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Add Experience</h3>
-                <p className="text-sm text-muted-foreground">
-                  Share your work history
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="p-5 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80 dark:bg-[#0c1017]/80 backdrop-blur-xl shadow-sm hover:shadow-md transition-all h-full flex items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <Briefcase className="h-6 w-6 text-emerald-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">Add Experience</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Share your career milestones
+              </p>
+            </div>
+          </motion.div>
         </Link>
 
         <Link href="/dashboard/projects">
-          <Card hover="lift" className="cursor-pointer h-full">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <FolderKanban className="h-6 w-6 text-purple-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Add Projects</h3>
-                <p className="text-sm text-muted-foreground">
-                  Showcase your best work
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="p-5 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80 dark:bg-[#0c1017]/80 backdrop-blur-xl shadow-sm hover:shadow-md transition-all h-full flex items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+              <FolderKanban className="h-6 w-6 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">Add Projects</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Showcase your best builds
+              </p>
+            </div>
+          </motion.div>
         </Link>
 
-        <Link href="/dashboard/theme">
-          <Card hover="lift" className="cursor-pointer h-full">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-orange-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Customize Theme</h3>
-                <p className="text-sm text-muted-foreground">
-                  Make it uniquely yours
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <Link href="/dashboard/certifications">
+          <motion.div
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="p-5 rounded-2xl border border-border/80 dark:border-white/10 bg-card/80 dark:bg-[#0c1017]/80 backdrop-blur-xl shadow-sm hover:shadow-md transition-all h-full flex items-center gap-4 cursor-pointer"
+          >
+            <div className="h-12 w-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-6 w-6 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">Certifications</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Highlight credentials & awards
+              </p>
+            </div>
+          </motion.div>
         </Link>
       </div>
     </div>

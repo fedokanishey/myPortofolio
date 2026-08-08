@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { getMyPortfolio } from "@/actions/portfolio";
-import { SettingsForm } from "./SettingsForm";
 
-export const metadata = {
-  title: "Settings",
-  description: "Portfolio settings",
-};
-
-export default async function SettingsPage() {
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -17,5 +16,9 @@ export default async function SettingsPage() {
 
   const portfolio = await getMyPortfolio();
 
-  return <SettingsForm portfolio={portfolio} />;
+  return (
+    <DashboardLayout slug={portfolio?.slug}>
+      {children}
+    </DashboardLayout>
+  );
 }

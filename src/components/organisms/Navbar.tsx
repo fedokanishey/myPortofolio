@@ -7,7 +7,8 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/atoms/Button";
 import { MagneticButton } from "@/components/atoms/MagneticButton";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
-import { Sparkles, ArrowUpRight } from "lucide-react";
+import { BrandLogo } from "@/components/atoms/BrandLogo";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -38,24 +39,15 @@ export function Navbar() {
         className={cn(
           "max-w-6xl mx-auto transition-all duration-300 rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between border",
           scrolled
-            ? "bg-[#0b0f17]/85 dark:bg-[#0b0f17]/85 backdrop-blur-xl border-white/[0.12] shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+            ? "bg-background/85 dark:bg-[#0b0f17]/85 backdrop-blur-xl border-border/80 dark:border-white/[0.12] shadow-[0_8px_30px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
             : "bg-transparent border-transparent"
         )}
       >
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 via-primary to-purple-600 p-px shadow-[0_0_15px_rgba(99,102,241,0.35)] transition-transform duration-300 group-hover:scale-105">
-            <div className="h-full w-full rounded-[7px] bg-[#0b0f17] flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-indigo-400" />
-            </div>
-          </div>
-          <span className="font-bold text-base tracking-tight font-display text-white">
-            Portfolio<span className="text-indigo-400">Builder</span>
-          </span>
-        </Link>
+        <BrandLogo variant="full" size="md" />
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/[0.06] rounded-full px-4 py-1">
+        <nav className="hidden md:flex items-center gap-1 bg-muted/50 dark:bg-white/[0.03] border border-border/60 dark:border-white/[0.06] rounded-full px-4 py-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -63,8 +55,8 @@ export function Navbar() {
               className={cn(
                 "text-xs font-medium px-3.5 py-1.5 rounded-full transition-all duration-200",
                 pathname === link.href
-                  ? "text-white bg-white/10"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+                  ? "text-foreground bg-background shadow-xs dark:bg-white/10 dark:text-white"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/5"
               )}
             >
               {link.label}
@@ -81,7 +73,7 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="hidden sm:inline-flex text-xs text-zinc-300 hover:text-white hover:bg-white/5"
+                className="hidden sm:inline-flex text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 Sign In
               </Button>
@@ -107,7 +99,7 @@ export function Navbar() {
               variant="ghost"
               size="sm"
               asChild
-              className="text-xs text-zinc-300 hover:text-white"
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
               <Link href="/dashboard">Dashboard</Link>
             </Button>

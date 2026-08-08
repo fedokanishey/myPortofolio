@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import {
   Award,
   Plus,
@@ -31,6 +31,97 @@ import { InputField, TextareaField } from "@/components/molecules/FormField";
 import { certificationSchema, type CertificationFormData } from "@/lib/validations";
 import { updateCertifications } from "@/actions/portfolio";
 import type { IPortfolio, ICertification } from "@/models/Portfolio";
+
+interface CertificationItemProps {
+  cert: ICertification;
+  index: number;
+  openEditForm: (index: number) => void;
+  handleDelete: (index: number) => void;
+}
+
+function CertificationItem({
+  cert,
+  index,
+  openEditForm,
+  handleDelete,
+}: CertificationItemProps) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={cert}
+      dragListener={false}
+      dragControls={dragControls}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      whileDrag={{ 
+        scale: 1.02, 
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        zIndex: 50,
+      }}
+      className="relative select-none"
+    >
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            {/* Drag Handle with Order Number */}
+            <div 
+              onPointerDown={(e) => dragControls.start(e)}
+              className="flex flex-col items-center gap-1 pt-1 cursor-grab active:cursor-grabbing touch-none select-none p-1.5 -m-1.5 rounded-lg hover:bg-muted/60 transition-colors"
+              title="Drag to reorder"
+            >
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold pointer-events-none">
+                {index + 1}
+              </div>
+              <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors pointer-events-none" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold truncate">{cert.title}</h3>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                <Calendar className="h-3 w-3" />
+                <span>{cert.date}</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                {cert.description}
+              </p>
+              {cert.technologies && cert.technologies.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {cert.technologies.slice(0, 3).map((tech) => (
+                    <Badge key={tech} variant="secondary" className="text-xs">
+                      {tech}
+                    </Badge>
+                  ))}
+                  {cert.technologies.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{cert.technologies.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1 ml-2 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => openEditForm(index)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(index)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Reorder.Item>
+  );
+}
 
 interface CertificationsFormProps {
   portfolio: IPortfolio | null;
@@ -94,6 +185,18 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
     setEditingIndex(null);
     reset();
   };
+
+  // Lock background scroll when modal is open
+  React.useEffect(() => {
+    if (isFormOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFormOpen]);
 
   const removeTech = (tech: string) => {
     setValue("technologies", technologies.filter((t) => t !== tech));
@@ -207,73 +310,13 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
             >
               <AnimatePresence mode="popLayout">
                 {certifications.map((cert, index) => (
-                  <Reorder.Item
+                  <CertificationItem
                     key={cert._id || `cert-${index}`}
-                    value={cert}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    whileDrag={{ 
-                      scale: 1.02, 
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                      cursor: "grabbing"
-                    }}
-                    className="cursor-grab active:cursor-grabbing"
-                  >
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          {/* Drag Handle with Order Number */}
-                          <div className="flex flex-col items-center gap-1 pt-1">
-                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                              {index + 1}
-                            </div>
-                            <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{cert.title}</h3>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>{cert.date}</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                              {cert.description}
-                            </p>
-                            {cert.technologies && cert.technologies.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {cert.technologies.slice(0, 3).map((tech) => (
-                                  <Badge key={tech} variant="secondary" className="text-xs">
-                                    {tech}
-                                  </Badge>
-                                ))}
-                                {cert.technologies.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{cert.technologies.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 ml-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditForm(index)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(index)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Reorder.Item>
+                    cert={cert}
+                    index={index}
+                    openEditForm={openEditForm}
+                    handleDelete={handleDelete}
+                  />
                 ))}
               </AnimatePresence>
             </Reorder.Group>
@@ -282,156 +325,159 @@ export function CertificationsForm({ portfolio }: CertificationsFormProps) {
       </Card>
 
       {/* Add/Edit Form Modal */}
+      {/* Add/Edit Form Modal */}
       <AnimatePresence>
         {isFormOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-hidden"
             onClick={closeForm}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-xl max-h-[88vh] flex flex-col rounded-2xl border border-border/80 dark:border-white/10 bg-card dark:bg-[#0c1017] shadow-2xl overflow-hidden"
             >
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>
-                      {editingIndex !== null ? "Edit Certification" : "Add Certification"}
-                    </CardTitle>
-                    <Button variant="ghost" size="icon" onClick={closeForm}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardDescription>
+              {/* Sticky Header */}
+              <div className="shrink-0 p-5 sm:p-6 border-b border-border/60 dark:border-white/[0.08] flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    {editingIndex !== null ? "Edit Certification" : "Add Certification"}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                     {editingIndex !== null
                       ? "Update your certification details"
                       : "Add a new certification to your portfolio"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <InputField
-                      label="Title"
-                      placeholder="AWS Certified Solutions Architect"
-                      error={errors.title?.message}
-                      required
-                      {...register("title")}
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-xl" onClick={closeForm}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Scrollable Form Content */}
+              <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+                  <InputField
+                    label="Title"
+                    placeholder="AWS Certified Solutions Architect"
+                    error={errors.title?.message}
+                    required
+                    {...register("title")}
+                  />
+
+                  {/* Certificate Image Upload */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Certificate Image</label>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
                     />
 
-                    {/* Certificate Image Upload */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Certificate Image
-                      </label>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      
-                      {imageUrl ? (
-                        <div className="relative rounded-lg overflow-hidden border">
-                          <Image 
-                            src={imageUrl} 
-                            alt="Certificate" 
-                            width={400}
-                            height={200}
-                            className="w-full h-32 object-cover"
-                          />
-                          <div className="absolute top-2 right-2 flex gap-1">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={isUploading}
-                            >
-                              Replace
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setValue("image", "")}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                    {imageUrl ? (
+                      <div className="relative rounded-xl overflow-hidden border border-border/70">
+                        <Image
+                          src={imageUrl}
+                          alt="Certificate"
+                          width={400}
+                          height={200}
+                          className="w-full h-36 object-cover"
+                        />
+                        <div className="absolute top-2 right-2 flex gap-1.5">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="rounded-lg shadow-sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                          >
+                            Replace
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="rounded-lg shadow-sm"
+                            onClick={() => setValue("image", "")}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      ) : (
-                        <div
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
-                        >
-                          {isUploading ? (
-                            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-                          ) : (
-                            <>
-                              <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
-                              <p className="text-sm text-muted-foreground">Click to upload certificate image</p>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer hover:border-primary/50 hover:bg-muted/40 transition-all"
+                      >
+                        {isUploading ? (
+                          <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                        ) : (
+                          <>
+                            <ImageIcon className="h-8 w-8 text-muted-foreground mb-2 opacity-60" />
+                            <p className="text-sm text-muted-foreground">Click to upload certificate image</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                    <TextareaField
-                      label="Description"
-                      placeholder="Describe what you learned and achieved..."
-                      error={errors.description?.message}
-                      required
-                      {...register("description")}
+                  <TextareaField
+                    label="Description"
+                    placeholder="Describe what you learned and achieved..."
+                    error={errors.description?.message}
+                    required
+                    {...register("description")}
+                  />
+
+                  {/* Technologies */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Technologies <span className="text-destructive">*</span>
+                    </label>
+                    <SkillSearchInput
+                      selectedSkills={technologies}
+                      onAdd={(tech) => {
+                        if (!technologies.includes(tech)) {
+                          setValue("technologies", [...technologies, tech]);
+                        }
+                      }}
+                      onRemove={removeTech}
                     />
+                    {errors.technologies?.message && (
+                      <p className="text-sm text-destructive">{errors.technologies.message}</p>
+                    )}
+                  </div>
 
-                    {/* Technologies */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Technologies <span className="text-destructive">*</span>
-                      </label>
-                      <SkillSearchInput
-                        selectedSkills={technologies}
-                        onAdd={(tech) => {
-                          if (!technologies.includes(tech)) {
-                            setValue("technologies", [...technologies, tech]);
-                          }
-                        }}
-                        onRemove={removeTech}
-                      />
-                      {errors.technologies?.message && (
-                        <p className="text-sm text-destructive">{errors.technologies.message}</p>
-                      )}
-                    </div>
+                  <InputField
+                    label="Date"
+                    placeholder="Jan 2024"
+                    error={errors.date?.message}
+                    required
+                    {...register("date")}
+                  />
+                </div>
 
-                    <InputField
-                      label="Date"
-                      placeholder="Jan 2024"
-                      error={errors.date?.message}
-                      required
-                      {...register("date")}
-                    />
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button type="button" variant="outline" onClick={closeForm}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" variant="gradient" isLoading={isSaving}>
-                        <span className="flex items-center gap-2">
-                          <Save className="h-4 w-4" />
-                          {editingIndex !== null ? "Update" : "Add"} Certification
-                        </span>
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+                {/* Sticky Action Footer */}
+                <div className="shrink-0 p-4 sm:p-5 border-t border-border/60 dark:border-white/[0.08] flex items-center justify-end gap-3 bg-muted/20 dark:bg-black/20">
+                  <Button type="button" variant="outline" className="rounded-xl" onClick={closeForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="gradient" className="rounded-xl" isLoading={isSaving}>
+                    <span className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      {editingIndex !== null ? "Save Changes" : "Add Certification"}
+                    </span>
+                  </Button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -11,9 +12,11 @@ if (typeof window !== "undefined") {
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isDashboard) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis({
@@ -24,6 +27,12 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       smoothWheel: true,
       wheelMultiplier: 0.9,
       touchMultiplier: 1.4,
+      prevent: (node) =>
+        !!(
+          node.closest("[data-lenis-prevent]") ||
+          node.closest('[role="dialog"]') ||
+          node.closest(".overflow-y-auto")
+        ),
     });
 
     lenisRef.current = lenis;
@@ -41,7 +50,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       gsap.ticker.remove(updateTicker);
       lenis.destroy();
     };
-  }, []);
+  }, [isDashboard]);
 
   return <>{children}</>;
 }

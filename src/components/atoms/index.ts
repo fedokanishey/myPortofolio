@@ -6,3 +6,4 @@ export { Avatar, avatarVariants, type AvatarProps } from "./Avatar";
 export { Skeleton, SkeletonCard, SkeletonProfile } from "./Skeleton";
 export { ThemeToggle } from "./ThemeToggle";
 export { ExpandableText } from "./ExpandableText";
+export { BrandLogo } from "./BrandLogo";

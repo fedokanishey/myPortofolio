@@ -100,11 +100,14 @@ export function AvatarUpload({
         disabled={isUploading}
       />
 
+      {/* Ambient background aura */}
+      <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500/20 via-primary/20 to-purple-500/20 rounded-full blur-lg opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
       <div
         onClick={() => !isUploading && inputRef.current?.click()}
         className={cn(
-          "relative rounded-full overflow-hidden cursor-pointer group",
-          "border-4 border-dashed border-border hover:border-primary/50 transition-colors",
+          "relative rounded-full overflow-hidden cursor-pointer group transition-all duration-300",
+          "ring-4 ring-border/80 hover:ring-primary/60 dark:ring-white/10 dark:hover:ring-primary/80 shadow-lg",
           sizeClasses[size]
         )}
       >
@@ -114,20 +117,23 @@ export function AvatarUpload({
               src={value}
               alt="Avatar"
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Camera className="h-6 w-6 text-white" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-white">
+              <Camera className="h-6 w-6" />
+              <span className="text-[11px] font-medium tracking-wide uppercase">Change</span>
             </div>
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted text-muted-foreground">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-muted/80 via-card to-primary/5 text-muted-foreground group-hover:text-primary transition-colors border-2 border-dashed border-border/80 group-hover:border-primary/50 rounded-full">
             {isUploading ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
             ) : (
               <>
-                <Camera className="h-6 w-6 mb-1" />
-                <span className="text-xs">Upload</span>
+                <div className="p-2.5 rounded-full bg-primary/10 text-primary mb-1.5 group-hover:scale-110 transition-transform">
+                  <Camera className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-semibold">Upload Photo</span>
               </>
             )}
           </div>

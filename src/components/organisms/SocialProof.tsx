@@ -37,9 +37,9 @@ export const SocialProof = () => {
   );
 
   return (
-    <section className="relative py-12 border-y border-white/[0.06] bg-[#070a10] overflow-hidden">
+    <section className="relative py-12 border-y border-border/70 dark:border-white/[0.06] bg-muted/30 dark:bg-[#070a10] overflow-hidden transition-colors duration-300">
       <div className="container mx-auto px-4 mb-6 text-center">
-        <p className="text-xs uppercase tracking-widest font-mono text-zinc-500 font-semibold">
+        <p className="text-xs uppercase tracking-widest font-mono text-muted-foreground font-semibold">
           Powering portfolios for creators & engineers across modern stacks
         </p>
       </div>
@@ -49,7 +49,7 @@ export const SocialProof = () => {
           {[...brands, ...brands].map((brand, i) => (
             <div
               key={`${brand}-${i}`}
-              className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors duration-200"
+              className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors duration-200"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-indigo-500/50" />
               <span className="font-mono text-xs sm:text-sm font-semibold tracking-wider opacity-70 hover:opacity-100 transition-opacity">

@@ -12,6 +12,13 @@ import { ProjectsGrid } from "@/components/organisms/ProjectsGrid";
 import { CertificationCard } from "@/components/molecules/CertificationCard";
 import { AnimatedSkillsCloud } from "@/components/molecules/AnimatedSkillsCloud";
 import { MagneticButton } from "@/components/atoms/MagneticButton";
+import {
+  PersistentBackgroundSystem,
+  HeroMeshAura,
+  SkillsConstellationDeco,
+  ProjectsBlueprintDeco,
+  ContactFlowingRibbons,
+} from "@/components/backgrounds";
 import type { IPortfolio, ISocialLinks, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
 // Helper to convert hex to HSL
@@ -294,32 +301,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   }, [sectionVisibility, filteredExperience, filteredProjects, filteredCertifications]);
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
-      {/* Animated Background Orbs - Optimized for Mobile (No CSS Blur) */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        {[0, 1].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full will-change-transform"
-            style={{
-              background: `radial-gradient(circle at center, ${i % 2 === 0 ? primaryColor : secondaryColor}15 0%, transparent 70%)`,
-              width: `${400 + i * 150}px`,
-              height: `${400 + i * 150}px`,
-              left: `${20 + i * 35}%`,
-              top: `${10 + i * 20}%`,
-            }}
-            animate={{
-              x: [0, 30, 0, -30, 0],
-              y: [0, -20, 30, -15, 0],
-            }}
-            transition={{
-              duration: 25 + i * 5,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen bg-background overflow-hidden relative">
+      {/* 5-Layer Persistent Living Background System */}
+      <PersistentBackgroundSystem
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+      />
 
       {/* Fixed Navigation Bar - Centered with Theme Toggle */}
       <motion.nav
@@ -387,7 +374,10 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="hero" className="relative pt-16 sm:pt-20 lg:pt-24 pb-10 overflow-hidden">
+      <section id="hero" className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10 overflow-hidden">
+        {/* Living Ambient Mesh Ring Decoration */}
+        <HeroMeshAura primaryColor={primaryColor} secondaryColor={secondaryColor} />
+        
         <div className="container mx-auto px-4 w-full">
           <motion.div
             variants={containerVariants}
@@ -582,7 +572,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showExperience && filteredExperience.length > 0 && (
         <motion.section
           id="experience"
-          className="py-20 bg-muted/30"
+          className="py-20 relative z-10"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
@@ -637,12 +627,15 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showProjects && filteredProjects.length > 0 && (
         <motion.section
           id="projects"
-          className="py-20"
+          className="py-20 relative z-10 overflow-hidden"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
+          {/* Blueprint Engineering Background Decor */}
+          <ProjectsBlueprintDeco primaryColor={primaryColor} />
+
           <div className="container mx-auto px-4">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
@@ -653,7 +646,11 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             >
               <span style={{ color: primaryColor }}>Projects</span>
             </motion.h2>
-            <ProjectsGrid projects={filteredProjects} />
+            <ProjectsGrid
+              projects={filteredProjects}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+            />
           </div>
         </motion.section>
       )}
@@ -667,7 +664,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showCertifications && filteredCertifications.length > 0 && (
         <motion.section
           id="certifications"
-          className="py-20 bg-muted/30"
+          className="py-20 relative z-10 overflow-hidden"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
@@ -716,13 +713,16 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {showContactSection && (
         <motion.section
           id="contact"
-          className="py-20"
+          className="py-20 relative overflow-hidden"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          <div className="container mx-auto px-4">
+          {/* Living Flowing Ribbon Curves in Background */}
+          <ContactFlowingRibbons primaryColor={primaryColor} secondaryColor={secondaryColor} />
+
+          <div className="container mx-auto px-4 relative z-10">
             <motion.h2
               className="text-3xl md:text-4xl font-bold mb-12 text-center"
               variants={headingVariants}

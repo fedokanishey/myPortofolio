@@ -17,10 +17,17 @@ interface Project {
 
 interface ProjectsGridProps {
   projects: Project[];
+  primaryColor?: string;
+  secondaryColor?: string;
   className?: string;
 }
 
-export function ProjectsGrid({ projects, className }: ProjectsGridProps) {
+export function ProjectsGrid({
+  projects,
+  primaryColor = "#6366F1",
+  secondaryColor = "#8B5CF6",
+  className,
+}: ProjectsGridProps) {
   if (!projects || projects.length === 0) {
     return (
       <div className="text-center py-12">
@@ -46,6 +53,8 @@ export function ProjectsGrid({ projects, className }: ProjectsGridProps) {
           liveUrl={project.liveUrl}
           githubUrl={project.githubUrl}
           featured={false}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
         />
       ))}
     </div>

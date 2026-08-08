@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import {
   FolderKanban,
   Plus,
@@ -39,6 +39,136 @@ import { z } from "zod";
 
 const formSchema = projectSchema;
 type ProjectFormData = z.infer<typeof formSchema>;
+
+interface ProjectItemProps {
+  proj: IProject;
+  index: number;
+  toggleFeatured: (index: number) => void;
+  openEditForm: (index: number) => void;
+  handleDelete: (index: number) => void;
+}
+
+function ProjectItem({
+  proj,
+  index,
+  toggleFeatured,
+  openEditForm,
+  handleDelete,
+}: ProjectItemProps) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={proj}
+      dragListener={false}
+      dragControls={dragControls}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      whileDrag={{ 
+        scale: 1.02, 
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        zIndex: 50,
+      }}
+      className="relative select-none"
+    >
+      <Card className={proj.featured ? "ring-2 ring-primary" : ""}>
+        <CardContent className="p-6">
+          <div className="flex items-start gap-3">
+            {/* Drag Handle with Order Number */}
+            <div 
+              onPointerDown={(e) => dragControls.start(e)}
+              className="flex flex-col items-center gap-1 pt-1 cursor-grab active:cursor-grabbing touch-none select-none p-1.5 -m-1.5 rounded-lg hover:bg-muted/60 transition-colors"
+              title="Drag to reorder"
+            >
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold pointer-events-none">
+                {index + 1}
+              </div>
+              <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors pointer-events-none" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold truncate">{proj.title}</h3>
+                {proj.featured && (
+                  <Badge variant="gradient" className="text-xs shrink-0">
+                    Featured
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {proj.description}
+              </p>
+              <div className="flex flex-wrap gap-1 mb-3">
+                {proj.technologies.slice(0, 4).map((tech) => (
+                  <Badge key={tech} variant="secondary" className="text-xs">
+                    {tech}
+                  </Badge>
+                ))}
+                {proj.technologies.length > 4 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{proj.technologies.length - 4}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {proj.liveUrl && (
+                  <a
+                    href={proj.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Live
+                  </a>
+                )}
+                {proj.githubUrl && (
+                  <a
+                    href={proj.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  >
+                    <Github className="h-3 w-3" />
+                    Code
+                  </a>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleFeatured(index)}
+                title={proj.featured ? "Remove from featured" : "Mark as featured"}
+              >
+                <Star
+                  className={`h-4 w-4 ${
+                    proj.featured ? "fill-primary text-primary" : ""
+                  }`}
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => openEditForm(index)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(index)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Reorder.Item>
+  );
+}
 
 interface ProjectsFormProps {
   portfolio: IPortfolio | null;
@@ -142,11 +272,22 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingIndex(null);
-
     setPreviewImage(null);
     setPreviewType("live");
     reset();
   };
+
+  // Lock background scroll when modal is open
+  React.useEffect(() => {
+    if (isFormOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFormOpen]);
 
   // Handle image upload — show crop modal first
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,110 +455,14 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
           >
             <AnimatePresence mode="popLayout">
               {projects.map((proj, index) => (
-                <Reorder.Item
+                <ProjectItem
                   key={proj._id || `proj-${index}`}
-                  value={proj}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  whileDrag={{ 
-                    scale: 1.02, 
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                    cursor: "grabbing"
-                  }}
-                  className="cursor-grab active:cursor-grabbing"
-                >
-                  <Card className={proj.featured ? "ring-2 ring-primary" : ""}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-3">
-                        {/* Drag Handle with Order Number */}
-                        <div className="flex flex-col items-center gap-1 pt-1">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                            {index + 1}
-                          </div>
-                          <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{proj.title}</h3>
-                            {proj.featured && (
-                              <Badge variant="gradient" className="text-xs">
-                                Featured
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {proj.description}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {proj.technologies.slice(0, 4).map((tech) => (
-                              <Badge key={tech} variant="secondary" className="text-xs">
-                                {tech}
-                              </Badge>
-                            ))}
-                            {proj.technologies.length > 4 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{proj.technologies.length - 4}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {proj.liveUrl && (
-                              <a
-                                href={proj.liveUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                Live
-                              </a>
-                            )}
-                            {proj.githubUrl && (
-                              <a
-                                href={proj.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-                              >
-                                <Github className="h-3 w-3" />
-                                Code
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggleFeatured(index)}
-                            title={proj.featured ? "Remove from featured" : "Mark as featured"}
-                          >
-                            <Star
-                              className={`h-4 w-4 ${
-                                proj.featured ? "fill-primary text-primary" : ""
-                              }`}
-                            />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditForm(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Reorder.Item>
+                  proj={proj}
+                  index={index}
+                  toggleFeatured={toggleFeatured}
+                  openEditForm={openEditForm}
+                  handleDelete={handleDelete}
+                />
               ))}
             </AnimatePresence>
           </Reorder.Group>
@@ -427,237 +472,233 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
       {/* Add/Edit Form Modal */}
       <AnimatePresence>
         {isFormOpen && (
-          <>
-            {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-hidden"
+            onClick={closeForm}
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/50"
-              onClick={closeForm}
-            />
-            {/* Modal Container - this is the scrollable area */}
-            <div className="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
-              <div className="flex min-h-full items-start justify-center p-4 pt-10 pb-10">
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                  className="w-full max-w-lg pointer-events-auto"
-                >
-                  <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>
-                      {editingIndex !== null ? "Edit Project" : "Add Project"}
-                    </CardTitle>
-                    <Button variant="ghost" size="icon" onClick={closeForm}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardDescription>
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl max-h-[88vh] flex flex-col rounded-2xl border border-border/80 dark:border-white/10 bg-card dark:bg-[#0c1017] shadow-2xl overflow-hidden"
+            >
+              {/* Sticky Header */}
+              <div className="shrink-0 p-5 sm:p-6 border-b border-border/60 dark:border-white/[0.08] flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    {editingIndex !== null ? "Edit Project" : "Add Project"}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                     {editingIndex !== null
                       ? "Update your project details"
                       : "Add a new project to your portfolio"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <InputField
-                      label="Project Title"
-                      placeholder="My Awesome Project"
-                      error={errors.title?.message}
-                      required
-                      {...register("title")}
-                    />
-                    <TextareaField
-                      label="Description"
-                      placeholder="Describe your project..."
-                      error={errors.description?.message}
-                      required
-                      {...register("description")}
-                    />
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-xl" onClick={closeForm}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
 
-                    {/* Technologies */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Technologies</label>
-                      <SkillSearchInput
-                        selectedSkills={technologies}
-                        onAdd={(tech) => {
-                          if (!technologies.includes(tech)) {
-                            setValue("technologies", [...technologies, tech]);
-                          }
+              {/* Scrollable Form Content */}
+              <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+                  <InputField
+                    label="Project Title"
+                    placeholder="My Awesome Project"
+                    error={errors.title?.message}
+                    required
+                    {...register("title")}
+                  />
+                  <TextareaField
+                    label="Description"
+                    placeholder="Describe your project..."
+                    error={errors.description?.message}
+                    required
+                    {...register("description")}
+                  />
+
+                  {/* Technologies */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Technologies</label>
+                    <SkillSearchInput
+                      selectedSkills={technologies}
+                      onAdd={(tech) => {
+                        if (!technologies.includes(tech)) {
+                          setValue("technologies", [...technologies, tech]);
+                        }
+                      }}
+                      onRemove={removeTech}
+                    />
+                    {errors.technologies?.message && (
+                      <p className="text-sm text-destructive">{errors.technologies.message}</p>
+                    )}
+                  </div>
+
+                  {/* Preview Type Selection */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Project Preview</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewType("live");
+                          setValue("image", "");
+                          setPreviewImage(null);
                         }}
-                        onRemove={removeTech}
+                        className={`flex-1 py-2 px-4 rounded-xl border text-sm font-medium transition-colors ${
+                          previewType === "live"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input hover:bg-muted"
+                        }`}
+                      >
+                        <ExternalLink className="h-4 w-4 inline mr-2" />
+                        Live URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewType("image");
+                          setValue("liveUrl", "");
+                        }}
+                        className={`flex-1 py-2 px-4 rounded-xl border text-sm font-medium transition-colors ${
+                          previewType === "image"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input hover:bg-muted"
+                        }`}
+                      >
+                        <ImageIcon className="h-4 w-4 inline mr-2" />
+                        Image
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InputField
+                      label="GitHub URL"
+                      placeholder="https://github.com/..."
+                      {...register("githubUrl")}
+                    />
+                    {previewType === "image" ? (
+                      <InputField
+                        label="Project Link (Optional)"
+                        placeholder="https://myproject.com"
+                        {...register("liveUrl")}
                       />
-                      {errors.technologies?.message && (
-                        <p className="text-sm text-destructive">{errors.technologies.message}</p>
+                    ) : (
+                      <InputField
+                        label="Live URL"
+                        placeholder="https://myproject.com"
+                        {...register("liveUrl")}
+                      />
+                    )}
+                  </div>
+
+                  {/* Preview Content based on type */}
+                  {previewType === "live" ? (
+                    <div className="space-y-3">
+                      {liveUrl ? (
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-muted border border-border/70">
+                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground z-0">
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                          </div>
+                          <iframe
+                            src={liveUrl}
+                            title="Website Preview"
+                            className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10"
+                            sandbox="allow-scripts allow-same-origin"
+                            loading="lazy"
+                          />
+                          <div className="absolute bottom-2 right-2 z-20">
+                            <span className="text-xs bg-primary/90 text-white px-2.5 py-1 rounded-md font-medium shadow-sm">
+                              Live Preview
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="aspect-video rounded-xl bg-muted/50 border border-dashed flex items-center justify-center">
+                          <div className="text-center text-muted-foreground">
+                            <ExternalLink className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Enter Live URL to see preview</p>
+                          </div>
+                        </div>
                       )}
                     </div>
-
-                                        {/* Preview Type Selection */}
+                  ) : (
                     <div className="space-y-3">
-                      <label className="text-sm font-medium">Project Preview</label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPreviewType("live");
-                            setValue("image", "");
-                            setPreviewImage(null);
-                          }}
-                          className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-colors ${
-                            previewType === "live"
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-input hover:bg-muted"
-                          }`}
-                        >
-                          <ExternalLink className="h-4 w-4 inline mr-2" />
-                          Live URL
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPreviewType("image");
-                            setValue("liveUrl", "");
-                          }}
-                          className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-colors ${
-                            previewType === "image"
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-input hover:bg-muted"
-                          }`}
-                        >
-                          <ImageIcon className="h-4 w-4 inline mr-2" />
-                          Image
-                        </button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <InputField
-                        label="GitHub URL"
-                        placeholder="https://github.com/..."
-                        {...register("githubUrl")}
-                      />
-                      {previewType === "image" ?  (
-                        <InputField
-                          label="Project Link (Optional)"
-                          placeholder="https://myproject.com"
-                          {...register("liveUrl")}
-                        />
-                      ):(<InputField
-                          label="Live URL"
-                          placeholder="https://myproject.com"
-                          {...register("liveUrl")}
-                        />)}
-                    </div>
-
-                    {/* Preview Content based on type */}
-                    {previewType === "live" ? (
-                      <div className="space-y-3">
-                        {/* Live Website Preview (iframe) */}
-                        {liveUrl ? (
-                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
-                            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground z-0">
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            </div>
-                            <iframe
-                              src={liveUrl}
-                              title="Website Preview"
-                              className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10"
-                              sandbox="allow-scripts allow-same-origin"
-                              loading="lazy"
-                            />
-                            <div className="absolute bottom-2 right-2 z-20">
-                              <span className="text-xs bg-primary/80 text-white px-2 py-1 rounded">
-                                Live Preview
-                              </span>
-                            </div>
+                      {previewImage ? (
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-muted border border-border/70">
+                          <img
+                            src={previewImage}
+                            alt="Project preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            title="Remove image"
+                            onClick={() => {
+                              setValue("image", "");
+                              setPreviewImage(null);
+                            }}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-white hover:bg-destructive/90 shadow-md"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="aspect-video rounded-xl bg-muted/50 border border-dashed flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={isUploadingImage}
+                          />
+                          <div className="text-center text-muted-foreground">
+                            {isUploadingImage ? (
+                              <>
+                                <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-primary" />
+                                <p className="text-sm">Uploading...</p>
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">Click to upload image</p>
+                              </>
+                            )}
                           </div>
-                        ) : (
-                          <div className="aspect-video rounded-lg bg-muted border flex items-center justify-center">
-                            <div className="text-center text-muted-foreground">
-                              <ExternalLink className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">Enter Live URL to see preview</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {/* Image Upload */}
-                        {previewImage ? (
-                          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border">
-                            <img
-                              src={previewImage}
-                              alt="Project preview"
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              title="Remove image"
-                              onClick={() => {
-                                setValue("image", "");
-                                setPreviewImage(null);
-                              }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-white hover:bg-destructive/90"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="aspect-video rounded-lg bg-muted border border-dashed flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              className="hidden"
-                              disabled={isUploadingImage}
-                            />
-                            <div className="text-center text-muted-foreground">
-                              {isUploadingImage ? (
-                                <>
-                                  <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin" />
-                                  <p className="text-sm">Uploading...</p>
-                                </>
-                              ) : (
-                                <>
-                                  <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                  <p className="text-sm">Click to upload image</p>
-                                </>
-                              )}
-                            </div>
-                          </label>
-                        )}
-                      </div>
-                    )}
-
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="rounded border-input"
-                        {...register("featured")}
-                      />
-                      <span className="text-sm">Featured project</span>
-                    </label>
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button type="button" variant="outline" onClick={closeForm}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" variant="gradient" isLoading={isSaving}>
-                        <span className="flex items-center gap-2">
-                          <Save className="h-4 w-4" />
-                          {editingIndex !== null ? "Update" : "Add"} Project
-                        </span>
-                      </Button>
+                        </label>
+                      )}
                     </div>
-                  </form>
-                </CardContent>
-              </Card>
+                  )}
+
+                  <label className="flex items-center gap-2.5 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      className="rounded border-input text-primary focus:ring-primary h-4 w-4"
+                      {...register("featured")}
+                    />
+                    <span className="text-sm font-medium">Featured project (highlight on portfolio)</span>
+                  </label>
+                </div>
+
+                {/* Sticky Action Footer */}
+                <div className="shrink-0 p-4 sm:p-5 border-t border-border/60 dark:border-white/[0.08] flex items-center justify-end gap-3 bg-muted/20 dark:bg-black/20">
+                  <Button type="button" variant="outline" className="rounded-xl" onClick={closeForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="gradient" className="rounded-xl" isLoading={isSaving}>
+                    <span className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      {editingIndex !== null ? "Save Changes" : "Add Project"}
+                    </span>
+                  </Button>
+                </div>
+              </form>
             </motion.div>
-              </div>
-            </div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -673,3 +714,4 @@ export function ProjectsForm({ portfolio }: ProjectsFormProps) {
     </div>
   );
 }
+

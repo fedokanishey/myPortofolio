@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { getMyPortfolio } from "@/actions/portfolio";
 import { DashboardContent } from "./DashboardContent";
 
@@ -25,9 +24,5 @@ export default async function DashboardPage() {
     ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
     : user?.username || "";
 
-  return (
-    <DashboardLayout slug={portfolio?.slug}>
-      <DashboardContent portfolio={portfolio} clerkName={clerkName} />
-    </DashboardLayout>
-  );
+  return <DashboardContent portfolio={portfolio} clerkName={clerkName} />;
 }

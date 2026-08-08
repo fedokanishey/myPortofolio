@@ -92,20 +92,20 @@ export const HeroSection = () => {
 
       <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center">
         {/* Release / Status Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-white/[0.1] bg-[#0f141c]/80 backdrop-blur-md mb-8 shadow-inner">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-medium text-zinc-300 font-mono tracking-wide">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-border/80 dark:border-white/[0.1] bg-card/80 dark:bg-[#0f141c]/80 backdrop-blur-md mb-8 shadow-xs">
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-medium text-foreground/80 dark:text-zinc-300 font-mono tracking-wide">
             PORTFOLIO ENGINE V2.0 LIVE
           </span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-xs text-indigo-400 font-medium flex items-center gap-1">
+          <span className="text-muted-foreground">|</span>
+          <span className="text-xs text-indigo-500 dark:text-indigo-400 font-medium flex items-center gap-1">
             <Sparkles className="h-3 w-3" /> Zero config
           </span>
         </div>
 
         {/* Masked Line Reveal Headline */}
         <div className="max-w-4xl mx-auto space-y-2 mb-6">
-          <TextReveal as="h1" delay={0.1} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
+          <TextReveal as="h1" delay={0.1} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.08]">
             Your work is world-class.
           </TextReveal>
           <TextReveal as="h1" delay={0.2} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08]">
@@ -114,7 +114,7 @@ export const HeroSection = () => {
         </div>
 
         {/* Subtitle */}
-        <TextReveal as="p" delay={0.35} duration={0.9} className="text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+        <TextReveal as="p" delay={0.35} duration={0.9} className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
           Craft a bespoke, high-performance portfolio with live themes, project analytics, and custom domain publishing in seconds.
         </TextReveal>
 
@@ -161,73 +161,73 @@ export const HeroSection = () => {
           {/* Floating Widget 1: Verified Domain */}
           <div
             ref={floatingBadgeRef1}
-            className="hidden md:flex absolute -left-6 top-16 z-30 items-center gap-3 bg-[#0d121c]/90 backdrop-blur-xl border border-white/[0.12] p-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.5)]"
+            className="hidden md:flex absolute -left-6 top-16 z-30 items-center gap-3 bg-card/95 dark:bg-[#0d121c]/90 backdrop-blur-xl border border-border/80 dark:border-white/[0.12] p-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.5)]"
           >
-            <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
               <Globe2 className="h-5 w-5" />
             </div>
             <div className="text-left">
-              <div className="text-xs font-semibold text-white flex items-center gap-1">
+              <div className="text-xs font-semibold text-foreground flex items-center gap-1">
                 alexdev.me
-                <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
               </div>
-              <div className="text-[10px] text-zinc-400 font-mono">Custom SSL Active</div>
+              <div className="text-[10px] text-muted-foreground font-mono">Custom SSL Active</div>
             </div>
           </div>
 
           {/* Floating Widget 2: Edge Speed */}
           <div
             ref={floatingBadgeRef2}
-            className="hidden md:flex absolute -right-6 bottom-20 z-30 items-center gap-3 bg-[#0d121c]/90 backdrop-blur-xl border border-white/[0.12] p-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.5)]"
+            className="hidden md:flex absolute -right-6 bottom-20 z-30 items-center gap-3 bg-card/95 dark:bg-[#0d121c]/90 backdrop-blur-xl border border-border/80 dark:border-white/[0.12] p-3.5 rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.5)]"
           >
-            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div className="text-left">
-              <div className="text-xs font-semibold text-white">99/100 Lighthouse</div>
-              <div className="text-[10px] text-zinc-400 font-mono">Instant edge delivery</div>
+              <div className="text-xs font-semibold text-foreground">99/100 Lighthouse</div>
+              <div className="text-[10px] text-muted-foreground font-mono">Instant edge delivery</div>
             </div>
           </div>
 
           {/* Canvas Wrapper */}
-          <div className="relative rounded-2xl border border-white/[0.12] bg-[#0b0f17] shadow-[0_25px_60px_rgba(0,0,0,0.7)] overflow-hidden">
+          <div className="relative rounded-2xl border border-border/80 dark:border-white/[0.12] bg-card/90 dark:bg-[#0b0f17] shadow-[0_25px_60px_rgba(0,0,0,0.12)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.7)] overflow-hidden">
             {/* Top Window Bar */}
-            <div className="h-10 px-4 bg-[#0e131d] border-b border-white/[0.08] flex items-center justify-between">
+            <div className="h-10 px-4 bg-muted/60 dark:bg-[#0e131d] border-b border-border/60 dark:border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-red-500/80" />
                 <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
                 <span className="h-3 w-3 rounded-full bg-green-500/80" />
               </div>
-              <div className="flex items-center gap-2 px-4 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] font-mono text-zinc-400">
-                <Code2 className="h-3 w-3 text-indigo-400" />
+              <div className="flex items-center gap-2 px-4 py-1 rounded-md bg-background/80 dark:bg-white/[0.04] border border-border/50 dark:border-white/[0.06] text-[11px] font-mono text-muted-foreground">
+                <Code2 className="h-3 w-3 text-indigo-500 dark:text-indigo-400" />
                 portfoliobuilder.dev/studio
               </div>
               <div className="w-12" />
             </div>
 
             {/* Inner Interactive Preview Canvas */}
-            <div className="p-6 md:p-10 bg-gradient-to-b from-[#0e1420] to-[#07090e]">
-              <div className="max-w-3xl mx-auto rounded-xl border border-white/[0.08] bg-[#0f1522]/70 p-6 md:p-8 backdrop-blur-md">
+            <div className="p-6 md:p-10 bg-gradient-to-b from-muted/30 dark:from-[#0e1420] to-background dark:to-[#07090e]">
+              <div className="max-w-3xl mx-auto rounded-xl border border-border/70 dark:border-white/[0.08] bg-card/85 dark:bg-[#0f1522]/70 p-6 md:p-8 backdrop-blur-md shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   <div className="relative">
                     <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-gradient-to-tr from-indigo-600 via-primary to-purple-500 p-0.5 shadow-lg">
-                      <div className="h-full w-full rounded-[14px] bg-[#0b0f17] flex items-center justify-center text-2xl font-bold text-white font-display">
+                      <div className="h-full w-full rounded-[14px] bg-card dark:bg-[#0b0f17] flex items-center justify-center text-2xl font-bold text-foreground dark:text-white font-display">
                         AD
                       </div>
                     </div>
-                    <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-[#0b0f17] flex items-center justify-center text-[10px] text-white">
+                    <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-card dark:border-[#0b0f17] flex items-center justify-center text-[10px] text-white">
                       ✓
                     </span>
                   </div>
 
                   <div className="flex-1 text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                      <h2 className="text-xl sm:text-2xl font-bold text-white">Alex Devlin</h2>
-                      <span className="inline-flex self-center sm:self-auto text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
+                      <h2 className="text-xl sm:text-2xl font-bold text-foreground">Alex Devlin</h2>
+                      <span className="inline-flex self-center sm:self-auto text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-medium">
                         Open to Roles
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-zinc-400 mb-4">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-4">
                       Senior Staff Engineer & Creative Technologist crafting high-scale web infrastructure and design systems.
                     </p>
 
@@ -235,7 +235,7 @@ export const HeroSection = () => {
                       {["Next.js 16", "TypeScript", "GSAP Motion", "PostgreSQL", "Cloud Architecture"].map((skill) => (
                         <span
                           key={skill}
-                          className="px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-zinc-300"
+                          className="px-2.5 py-1 rounded-md bg-muted/60 dark:bg-white/[0.04] border border-border/60 dark:border-white/[0.08] text-xs font-mono text-foreground/80 dark:text-zinc-300"
                         >
                           {skill}
                         </span>

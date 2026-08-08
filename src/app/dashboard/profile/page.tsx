@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { getMyPortfolio } from "@/actions/portfolio";
 import { ProfileForm } from "./ProfileForm";
 
@@ -25,9 +24,5 @@ export default async function ProfilePage() {
     ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
     : user?.username || "";
 
-  return (
-    <DashboardLayout slug={portfolio?.slug}>
-      <ProfileForm portfolio={portfolio} clerkName={clerkName} />
-    </DashboardLayout>
-  );
+  return <ProfileForm portfolio={portfolio} clerkName={clerkName} />;
 }

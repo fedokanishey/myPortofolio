@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
@@ -7,8 +8,8 @@ import { User, Portfolio } from "@/models";
 import { portfolioSchema, profileSchema } from "@/lib/validations";
 import type { IPortfolio, IExperience, IProject, IThemeConfig, ICertification, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
 
-// Helper to get or create user
-async function getOrCreateUser() {
+// Helper to get or create user (cached per request)
+const getOrCreateUser = cache(async () => {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -33,10 +34,10 @@ async function getOrCreateUser() {
   }
 
   return user;
-}
+});
 
-// Get portfolio for current user
-export async function getMyPortfolio() {
+// Get portfolio for current user (cached per request)
+export const getMyPortfolio = cache(async (): Promise<IPortfolio | null> => {
   try {
     const user = await getOrCreateUser();
     await connectDB();
@@ -52,7 +53,7 @@ export async function getMyPortfolio() {
     console.error("Error fetching portfolio:", error);
     return null;
   }
-}
+});
 
 // Create portfolio
 export async function createPortfolio(data: unknown) {

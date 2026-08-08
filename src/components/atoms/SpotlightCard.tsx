@@ -37,7 +37,7 @@ export const SpotlightCard = ({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c1017]/80 backdrop-blur-md p-8 transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(99,102,241,0.08)] ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border border-border/80 dark:border-white/[0.08] bg-card/85 dark:bg-[#0c1017]/80 backdrop-blur-md p-8 transition-all duration-300 hover:border-primary/40 dark:hover:border-white/20 shadow-xs hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(99,102,241,0.08)] ${className}`}
       {...props}
     >
       {/* Dynamic Cursor Spotlight */}
@@ -49,7 +49,7 @@ export const SpotlightCard = ({
         }}
       />
       {/* Specular Top Edge Highlight */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 dark:via-white/25 to-transparent" />
       <div className="relative z-10">{children}</div>
     </div>
   );

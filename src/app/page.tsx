@@ -7,11 +7,15 @@ import { BentoFeatures } from "@/components/organisms/BentoFeatures";
 import { WorkflowTimeline } from "@/components/organisms/WorkflowTimeline";
 import { MetricsSection } from "@/components/organisms/MetricsSection";
 import { FinalCta } from "@/components/organisms/FinalCta";
+import { PersistentBackgroundSystem } from "@/components/backgrounds";
 
 export default function HomePage() {
   return (
     <MainLayout>
-      <div className="relative w-full overflow-hidden bg-[#07090e] text-zinc-100 selection:bg-indigo-500/30 selection:text-white">
+      <div className="relative w-full overflow-hidden bg-background text-foreground transition-colors duration-300">
+        {/* 5-Layer Persistent Living Background System */}
+        <PersistentBackgroundSystem primaryColor="#6366F1" secondaryColor="#8B5CF6" />
+
         {/* Hero Section with Line Reveals & 3D Tilt Mockup */}
         <HeroSection />
 
