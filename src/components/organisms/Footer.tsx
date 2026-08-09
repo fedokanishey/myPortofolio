@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, Twitter } from "lucide-react";
+import { Github, Linkedin } from "lucide-react";
 import { BrandLogo } from "@/components/atoms/BrandLogo";
 
 export function Footer() {
@@ -74,20 +74,22 @@ export function Footer() {
             </h4>
             <div className="flex items-center gap-3 pt-1">
               <Link
-                href="https://twitter.com"
+                href="https://github.com/fedokanishey"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-9 w-9 rounded-lg border border-border/70 dark:border-white/[0.08] bg-muted/40 dark:bg-white/[0.02] flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
-              >
-                <Twitter className="h-4 w-4" />
-              </Link>
-              <Link
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                aria-label="GitHub Profile"
                 className="h-9 w-9 rounded-lg border border-border/70 dark:border-white/[0.08] bg-muted/40 dark:bg-white/[0.02] flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
               >
                 <Github className="h-4 w-4" />
+              </Link>
+              <Link
+                href="https://www.linkedin.com/in/fedaamohammed"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn Profile"
+                className="h-9 w-9 rounded-lg border border-border/70 dark:border-white/[0.08] bg-muted/40 dark:bg-white/[0.02] flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+              >
+                <Linkedin className="h-4 w-4" />
               </Link>
             </div>
           </div>
