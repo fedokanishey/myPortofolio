@@ -141,13 +141,9 @@ export function CertificationCard({
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
         whileHover={{ y: -5 }}
         className={cn(
-          "group relative overflow-hidden rounded-xl border bg-card/80 backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between",
+          "group relative overflow-hidden rounded-xl border bg-card/80 backdrop-blur-md transition-all duration-300 hover:shadow-xl flex flex-col justify-between h-full",
           className
         )}
         style={{

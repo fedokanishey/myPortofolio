@@ -532,19 +532,19 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
   };
 
   if (hasFailed || stage >= sources.length) {
-    // All sources failed — show letter fallback
+    const firstLetter = name.trim().charAt(0).toUpperCase() || "?";
     return (
       <span
-        className="inline-flex items-center justify-center rounded-sm font-bold flex-shrink-0"
+        className="inline-flex items-center justify-center rounded-lg font-bold font-mono tracking-tight flex-shrink-0 border border-primary/20 shadow-2xs"
         style={{
           width: size,
           height: size,
-          fontSize: size * 0.65,
-          background: color ? `#${color.replace('#', '')}25` : "hsl(var(--muted))",
-          color: color ? `#${color.replace('#', '')}` : "hsl(var(--muted-foreground))",
+          fontSize: Math.max(10, size * 0.6),
+          background: color ? `${color}25` : "hsl(var(--primary) / 0.15)",
+          color: color || "hsl(var(--primary))",
         }}
       >
-        {name.charAt(0).toUpperCase()}
+        {firstLetter}
       </span>
     );
   }
