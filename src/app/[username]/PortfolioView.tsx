@@ -360,7 +360,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="hero" className="relative z-10 pt-16 sm:pt-20 lg:pt-24 pb-10 overflow-hidden">
+      <section id="hero" className="relative z-10 pt-28 sm:pt-32 lg:pt-24 pb-10 overflow-hidden">
         {/* Living Ambient Mesh Ring Decoration */}
         <HeroMeshAura primaryColor={primaryColor} secondaryColor={secondaryColor} />
         
@@ -499,7 +499,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
             </div>
 
             {/* Right Column: Floating Avatar - Elevated & Enlarged */}
-            <motion.div variants={itemVariants} className="flex-none z-10 lg:self-start lg:pt-1">
+            <motion.div variants={itemVariants} className="flex-none z-10 mt-6 sm:mt-8 lg:mt-0 lg:self-start lg:pt-1">
               <div className="relative">
                 {/* Static outer glow */}
                 <div
@@ -521,11 +521,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                         src={avatarSrc}
                         alt={user.name || displayName}
                         fill
+                        sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, 420px"
+                        priority
                         className={`object-cover transition-opacity duration-500 ${
                           imageLoaded ? "opacity-100" : "opacity-0"
                         }`}
                         onLoad={() => setImageLoaded(true)}
-                        priority
                       />
                       {!imageLoaded && (
                         <div 

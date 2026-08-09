@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-2xl border transition-all duration-300 relative overflow-hidden",
+  "rounded-2xl border transition-all duration-300 relative",
   {
     variants: {
       variant: {
@@ -38,7 +38,7 @@ function Card({ className, variant = "default", hover, showDecoration = true, ch
   return (
     <div className={cn(cardVariants({ variant, hover }), className)} {...props}>
       {showDecoration && variant === "default" && (
-        <>
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
           {/* Subtle Top Accent Highlight */}
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/35 dark:via-primary/50 to-transparent pointer-events-none" />
           
@@ -47,7 +47,7 @@ function Card({ className, variant = "default", hover, showDecoration = true, ch
           
           {/* Soft Corner Ambient Accent */}
           <div className="absolute -top-16 -right-16 w-36 h-36 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-        </>
+        </div>
       )}
       <div className="relative z-10">{children}</div>
     </div>

@@ -563,6 +563,8 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
   );
 }
 
+const CATEGORIES = ["All", "Frontend", "Backend", "Languages", "Database", "Cloud", "DevOps", "Tools", "Mobile"];
+
 interface SkillSearchInputProps {
   selectedSkills: string[];
   onAdd: (skill: string) => void;
@@ -571,6 +573,7 @@ interface SkillSearchInputProps {
 
 export function SkillSearchInput({ selectedSkills, onAdd, onRemove }: SkillSearchInputProps) {
   const [query, setQuery] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState("All");
   const [isOpen, setIsOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -587,14 +590,21 @@ export function SkillSearchInput({ selectedSkills, onAdd, onRemove }: SkillSearc
 
   const filteredSkills = React.useMemo(() => {
     const q = query.toLowerCase().trim();
-    const available = ALL_SKILLS.filter(
+    let available = ALL_SKILLS.filter(
       s => !selectedSkills.some(sel => sel.toLowerCase() === s.name.toLowerCase())
     );
-    if (!q) return available.slice(0, 30); // Show first 30 when no query
+
+    if (selectedCategory !== "All") {
+      available = available.filter(
+        s => s.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    if (!q) return available.slice(0, 100);
     return available.filter(
       s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
-    ).slice(0, 50);
-  }, [query, selectedSkills]);
+    ).slice(0, 120);
+  }, [query, selectedCategory, selectedSkills]);
 
   const isCustomSkill = query.trim().length > 0 &&
     !ALL_SKILLS.some(s => s.name.toLowerCase() === query.trim().toLowerCase()) &&
@@ -620,10 +630,10 @@ export function SkillSearchInput({ selectedSkills, onAdd, onRemove }: SkillSearc
   };
 
   return (
-    <div ref={containerRef} className="space-y-3">
-      {/* Search Input */}
+    <div ref={containerRef} className="space-y-4">
+      {/* Large Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <input
           type="text"
           value={query}
@@ -631,51 +641,80 @@ export function SkillSearchInput({ selectedSkills, onAdd, onRemove }: SkillSearc
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search skills... (e.g., React, Python, Docker)"
-          className="w-full h-10 pl-9 pr-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          className="w-full h-12 sm:h-13 pl-12 pr-4 rounded-xl border border-input bg-background text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary shadow-xs transition-all"
         />
 
-        {/* Dropdown */}
+        {/* Large Dropdown Panel */}
         {isOpen && (query || filteredSkills.length > 0) && (
-          <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-64 overflow-auto rounded-lg border border-border bg-background shadow-xl">
-            {filteredSkills.map((skill) => (
-              <button
-                key={skill.name}
-                type="button"
-                onClick={() => handleSelect(skill.name)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/70 transition-colors text-left"
-              >
-                <SkillIcon name={skill.name} size={20} />
-                <span className="text-sm font-medium">{skill.name}</span>
-                <span className="ml-auto text-xs text-muted-foreground">{skill.category}</span>
-              </button>
-            ))}
+          <div className="absolute z-50 top-full left-0 right-0 mt-2 min-h-[280px] max-h-[500px] overflow-hidden rounded-2xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col">
+            {/* Category Filter Bar */}
+            <div className="flex-none bg-muted/40 border-b border-border/80 p-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                    selectedCategory === cat
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "bg-background/80 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-            {/* Custom skill option */}
-            {isCustomSkill && (
-              <button
-                type="button"
-                onClick={() => handleSelect(query.trim())}
-                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/70 transition-colors text-left border-t border-border"
-              >
-                <Plus className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-sm">
-                  Add <strong>&quot;{query.trim()}&quot;</strong> as custom skill
-                </span>
-              </button>
-            )}
+            {/* Scrollable Skill List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-1">
+              {filteredSkills.map((skill) => (
+                <button
+                  key={skill.name}
+                  type="button"
+                  onClick={() => handleSelect(skill.name)}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 hover:bg-primary/10 dark:hover:bg-indigo-500/15 transition-all text-left group rounded-xl"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-muted/80 dark:bg-white/[0.08] flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                    <SkillIcon name={skill.name} size={22} />
+                  </div>
+                  <span className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {skill.name}
+                  </span>
+                  <span className="ml-auto text-xs font-mono font-medium px-2.5 py-1 rounded-md bg-muted dark:bg-white/[0.08] text-muted-foreground">
+                    {skill.category}
+                  </span>
+                </button>
+              ))}
 
-            {filteredSkills.length === 0 && !isCustomSkill && (
-              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                No skills found
-              </div>
-            )}
+              {/* Custom skill option */}
+              {isCustomSkill && (
+                <button
+                  type="button"
+                  onClick={() => handleSelect(query.trim())}
+                  className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-primary/10 transition-all text-left rounded-xl"
+                >
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Plus className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-base font-medium">
+                    Add <strong>&quot;{query.trim()}&quot;</strong> as custom skill
+                  </span>
+                </button>
+              )}
+
+              {filteredSkills.length === 0 && !isCustomSkill && (
+                <div className="px-4 py-8 text-center text-base text-muted-foreground">
+                  No skills found in {selectedCategory} category
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Selected Skills */}
+      {/* Selected Skills Badges */}
       {selectedSkills.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5 pt-1">
           {selectedSkills.map((skill) => {
             return (
               <Badge
@@ -683,10 +722,10 @@ export function SkillSearchInput({ selectedSkills, onAdd, onRemove }: SkillSearc
                 variant="secondary"
                 removable
                 onRemove={() => onRemove(skill)}
-                className="flex items-center gap-1.5 pr-1"
+                className="flex items-center gap-2 px-3.5 py-2 text-sm sm:text-base font-semibold rounded-xl border border-border/80 shadow-xs hover:border-primary/40 transition-all"
               >
-                <SkillIcon name={skill} size={14} />
-                {skill}
+                <SkillIcon name={skill} size={18} />
+                <span>{skill}</span>
               </Badge>
             );
           })}

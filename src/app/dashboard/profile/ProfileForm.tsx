@@ -317,14 +317,14 @@ export function ProfileForm({ portfolio, clerkName }: ProfileFormProps) {
         </Card>
 
         {/* Skills */}
-        <Card>
+        <Card className="relative z-30 overflow-visible">
           <CardHeader>
             <CardTitle>Skills</CardTitle>
             <CardDescription>
               Search and select your technical skills
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 overflow-visible">
             <SkillSearchInput
               selectedSkills={skills}
               onAdd={(skill) => {

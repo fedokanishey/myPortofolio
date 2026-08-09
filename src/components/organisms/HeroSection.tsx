@@ -106,16 +106,16 @@ export const HeroSection = () => {
         {/* Masked Line Reveal Headline */}
         <div className="max-w-4xl mx-auto space-y-2 mb-6">
           <TextReveal as="h1" delay={0.1} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.08]">
-            Your work is world-class.
+            Your work is world-class
           </TextReveal>
           <TextReveal as="h1" delay={0.2} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08]">
-            <span className="text-gradient">Your portfolio should be too.</span>
+            <span className="text-gradient">Your portfolio should be too</span>
           </TextReveal>
         </div>
 
         {/* Subtitle */}
         <TextReveal as="p" delay={0.35} duration={0.9} className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-          Craft a bespoke, high-performance portfolio with live themes, project analytics, and custom domain publishing in seconds.
+          Craft a bespoke, high-performance portfolio with live themes, project analytics, and custom domain publishing in seconds
         </TextReveal>
 
         {/* Primary Action Group */}

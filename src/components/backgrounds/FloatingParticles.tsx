@@ -32,7 +32,9 @@ export function FloatingParticles({
       {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute rounded-full pointer-events-none"
+          className={`absolute rounded-full pointer-events-none ${
+            p.id >= 6 ? "hidden sm:block" : ""
+          }`}
           style={{
             left: p.left,
             top: p.top,
@@ -43,6 +45,8 @@ export function FloatingParticles({
             opacity: p.opacity,
             animation: `particle-rise ${p.duration}s ease-in-out infinite`,
             animationDelay: `${p.delay}s`,
+            willChange: "transform, opacity",
+            transform: "translateZ(0)",
           }}
         />
       ))}
