@@ -1,5 +1,3 @@
-"use client";
-
 import { MainLayout } from "@/components/templates/MainLayout";
 import { HeroSection } from "@/components/organisms/HeroSection";
 import { SocialProof } from "@/components/organisms/SocialProof";

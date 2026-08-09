@@ -27,7 +27,7 @@ export const HeroSection = () => {
       const isMobile = window.matchMedia("(max-width: 768px)").matches;
       const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      if (prefersReduced) return;
+      if (prefersReduced || isMobile) return;
 
       // 3D Tilt and scale reveal for product preview canvas
       if (previewRef.current) {
@@ -106,7 +106,7 @@ export const HeroSection = () => {
         {/* Masked Line Reveal Headline */}
         <div className="max-w-4xl mx-auto space-y-2 mb-6">
           <TextReveal as="h1" delay={0.1} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-[1.08]">
-            Your work is world-class
+            Your work deserves better
           </TextReveal>
           <TextReveal as="h1" delay={0.2} duration={1} className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08]">
             <span className="text-gradient">Your portfolio should be too</span>

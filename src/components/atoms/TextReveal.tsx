@@ -35,7 +35,10 @@ export const TextReveal = ({
       const triggerEl = containerRef.current;
       if (!el || !triggerEl || typeof window === "undefined") return;
 
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReduced || isMobile) {
         gsap.set(el, { yPercent: 0, opacity: 1 });
         return;
       }
