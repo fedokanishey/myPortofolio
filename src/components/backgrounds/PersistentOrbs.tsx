@@ -19,7 +19,7 @@ export function PersistentOrbs({
     >
       {/* Primary Ambient Drifting Orb (Top-Left) */}
       <div
-        className="absolute -top-20 -left-20 w-[320px] h-[320px] sm:w-[700px] sm:h-[700px] rounded-full animate-orb-primary"
+        className="absolute -top-20 -left-20 w-[280px] h-[280px] sm:w-[700px] sm:h-[700px] rounded-full sm:animate-orb-primary"
         style={{
           background: `radial-gradient(circle at center, ${primaryColor}40 0%, ${primaryColor}22 30%, ${primaryColor}08 55%, transparent 72%)`,
           willChange: "transform, opacity",
@@ -29,7 +29,7 @@ export function PersistentOrbs({
 
       {/* Secondary Ambient Drifting Orb (Center-Right) */}
       <div
-        className="absolute top-[30%] -right-28 w-[300px] h-[300px] sm:w-[650px] sm:h-[650px] rounded-full animate-orb-secondary"
+        className="absolute top-[30%] -right-28 w-[250px] h-[250px] sm:w-[650px] sm:h-[650px] rounded-full sm:animate-orb-secondary"
         style={{
           background: `radial-gradient(circle at center, ${secondaryColor}38 0%, ${secondaryColor}18 35%, ${secondaryColor}06 60%, transparent 72%)`,
           willChange: "transform, opacity",

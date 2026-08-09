@@ -33,7 +33,7 @@ export function FloatingParticles({
         <div
           key={p.id}
           className={`absolute rounded-full pointer-events-none ${
-            p.id >= 6 ? "hidden sm:block" : ""
+            p.id >= 4 ? "hidden sm:block" : ""
           }`}
           style={{
             left: p.left,

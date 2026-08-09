@@ -1,11 +1,32 @@
+import dynamic from "next/dynamic";
 import { MainLayout } from "@/components/templates/MainLayout";
 import { HeroSection } from "@/components/organisms/HeroSection";
-import { SocialProof } from "@/components/organisms/SocialProof";
-import { BentoFeatures } from "@/components/organisms/BentoFeatures";
-import { WorkflowTimeline } from "@/components/organisms/WorkflowTimeline";
-import { MetricsSection } from "@/components/organisms/MetricsSection";
-import { FinalCta } from "@/components/organisms/FinalCta";
 import { PersistentBackgroundSystem } from "@/components/backgrounds";
+
+const SocialProof = dynamic(
+  () => import("@/components/organisms/SocialProof").then((m) => m.SocialProof),
+  { ssr: true }
+);
+
+const BentoFeatures = dynamic(
+  () => import("@/components/organisms/BentoFeatures").then((m) => m.BentoFeatures),
+  { ssr: true }
+);
+
+const WorkflowTimeline = dynamic(
+  () => import("@/components/organisms/WorkflowTimeline").then((m) => m.WorkflowTimeline),
+  { ssr: true }
+);
+
+const MetricsSection = dynamic(
+  () => import("@/components/organisms/MetricsSection").then((m) => m.MetricsSection),
+  { ssr: true }
+);
+
+const FinalCta = dynamic(
+  () => import("@/components/organisms/FinalCta").then((m) => m.FinalCta),
+  { ssr: true }
+);
 
 export default function HomePage() {
   return (

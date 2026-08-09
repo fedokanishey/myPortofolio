@@ -87,8 +87,8 @@ export const HeroSection = () => {
     >
       {/* Background Dot Grid & Ambient Glows */}
       <div className="absolute inset-0 bg-dot-grid opacity-40 -z-20 pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[320px] bg-gradient-to-tr from-indigo-500/15 via-purple-500/10 to-transparent blur-[120px] -z-10 rounded-full pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[250px] bg-primary/10 blur-[100px] -z-10 rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[200px] sm:w-[650px] sm:h-[320px] bg-gradient-to-tr from-indigo-500/15 via-purple-500/10 to-transparent blur-2xl sm:blur-[120px] -z-10 rounded-full pointer-events-none" />
+      <div className="absolute top-1/3 right-1/4 w-[220px] h-[150px] sm:w-[400px] sm:h-[250px] bg-primary/10 blur-2xl sm:blur-[100px] -z-10 rounded-full pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center">
         {/* Release / Status Pill */}
