@@ -19,11 +19,11 @@ export function HeroMeshAura({
   return (
     <div
       aria-hidden="true"
-      className={`absolute inset-0 pointer-events-none -z-10 overflow-hidden ${className}`}
+      className={`absolute inset-0 pointer-events-none -z-10 overflow-hidden flex items-center justify-center ${className}`}
     >
       <svg
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-25 dark:opacity-20 animate-spin"
-        style={{ animationDuration: "90s" }}
+        className="w-[800px] h-[800px] opacity-25 dark:opacity-20 animate-spin will-change-transform"
+        style={{ animationDuration: "90s", transform: "translateZ(0)" }}
         viewBox="0 0 800 800"
         fill="none"
       >

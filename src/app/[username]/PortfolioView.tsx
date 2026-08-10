@@ -181,43 +181,36 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   const visibleName = mounted ? displayName.slice(0, nameCount) : displayName;
   const visibleHeadline = mounted ? headlineText.slice(0, headlineCount) : headlineText;
 
-  // Track scroll position for active section and scroll-to-top button (throttled)
+  // Track active section and scroll to top without forced reflows
   React.useEffect(() => {
-    let ticking = false;
-    
     const handleScroll = () => {
-      if (ticking) return;
-      
-      ticking = true;
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        setShowScrollTop(scrollY > 400);
-
-        // Check if we're at the bottom of the page
-        if (scrollY + windowHeight >= documentHeight - 100) {
-          setActiveSection("contact");
-          ticking = false;
-          return;
-        }
-
-        // Find active section
-        const sections = ["hero", "experience", "projects", "certifications", "contact"];
-        for (const section of sections.reverse()) {
-          const element = document.getElementById(section);
-          if (element && scrollY >= element.offsetTop - 150) {
-            setActiveSection(section);
-            break;
-          }
-        }
-        ticking = false;
-      });
+      setShowScrollTop(window.scrollY > 400);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    // Zero-reflow section tracking with IntersectionObserver
+    const sections = ["hero", "experience", "projects", "certifications", "contact"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -50% 0px" }
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   const scrollToSection = (sectionId: string) => {
@@ -371,8 +364,10 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
-      <section id="hero" className="relative z-10 pt-28 sm:pt-32 lg:pt-24 pb-10 overflow-hidden">
+      {/* Semantic Main Content Landmark for Accessibility & Performance */}
+      <main id="main-content" className="relative z-10">
+        {/* Hero Section */}
+        <section id="hero" className="relative pt-28 sm:pt-32 lg:pt-24 pb-10 overflow-hidden">
         {/* Living Ambient Mesh Ring Decoration */}
         <HeroMeshAura primaryColor={primaryColor} secondaryColor={secondaryColor} />
         
@@ -555,7 +550,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showExperience && filteredExperience.length > 0 && (
         <motion.section
           id="experience"
-          className="py-20 relative z-10"
+          className="py-20 relative z-10 content-auto"
           variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
@@ -604,7 +599,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showProjects && filteredProjects.length > 0 && (
         <motion.section
           id="projects"
-          className="py-20 relative z-10 overflow-hidden"
+          className="py-20 relative z-10 overflow-hidden content-auto"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
@@ -635,7 +630,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showCertifications && filteredCertifications.length > 0 && (
         <motion.section
           id="certifications"
-          className="py-20 relative z-10 overflow-hidden"
+          className="py-20 relative z-10 overflow-hidden content-auto"
           variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
@@ -678,7 +673,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {showContactSection && (
         <motion.section
           id="contact"
-          className="py-20 relative overflow-hidden"
+          className="py-20 relative overflow-hidden content-auto"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
@@ -758,6 +753,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           </div>
         </motion.section>
       )}
+      </main>
 
       {/* Footer */}
       <motion.footer

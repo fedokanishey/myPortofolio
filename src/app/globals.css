@@ -350,4 +350,10 @@ html {
   }
 }
 
+/* Modern Performance: Content-Visibility for Below-the-Fold Sections */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 650px;
+}
+
 
