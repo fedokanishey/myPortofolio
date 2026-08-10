@@ -72,8 +72,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider dynamic>
       <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+        <head>
+          <link rel="preconnect" href="https://cdn.simpleicons.org" crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href="https://cdn.simpleicons.org" />
+          <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        </head>
         <body className={`${inter.variable} ${plusJakarta.variable} ${caveat.variable} font-sans antialiased bg-background text-foreground selection:bg-indigo-500/30 selection:text-foreground`}>
           <ThemeProvider
             attribute="class"

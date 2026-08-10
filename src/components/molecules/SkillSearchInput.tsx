@@ -557,6 +557,8 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
       alt=""
       width={size}
       height={size}
+      loading="lazy"
+      decoding="async"
       className="flex-shrink-0"
       onError={handleError}
     />
