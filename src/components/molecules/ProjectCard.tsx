@@ -38,10 +38,48 @@ export function ProjectCard({
   const [imageError, setImageError] = React.useState(false);
   const [descExpanded, setDescExpanded] = React.useState(false);
   const [techsExpanded, setTechsExpanded] = React.useState(false);
+  const [shouldLoadIframe, setShouldLoadIframe] = React.useState(false);
+  const previewContainerRef = React.useRef<HTMLDivElement>(null);
   const cardRef = usePerspectiveTilt<HTMLDivElement>(6);
 
   const hasValidImage = image && !imageError && image.startsWith("http");
   const techs = Array.isArray(technologies) ? technologies : [];
+
+  React.useEffect(() => {
+    if (!liveUrl || hasValidImage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setShouldLoadIframe(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "250px" }
+    );
+
+    if (previewContainerRef.current) {
+      observer.observe(previewContainerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [liveUrl, hasValidImage]);
+
+  // Normalize liveUrl for local development preview (handles portofolio-maker on localhost)
+  const previewUrl = React.useMemo(() => {
+    if (!liveUrl) return "";
+    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      try {
+        const urlObj = new URL(liveUrl);
+        if (urlObj.hostname.includes("portofolio-maker") || urlObj.hostname === "localhost") {
+          return "/";
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return liveUrl;
+  }, [liveUrl]);
 
   const maxDescLength = 85;
   const shouldTruncateDesc = description.length > maxDescLength;
@@ -100,7 +138,10 @@ export function ProjectCard({
 
       <div>
         {/* Project Thumbnail with Zoom Reveal */}
-        <div className="relative aspect-video overflow-hidden bg-muted/40 dark:bg-[#07090e] border-b border-border/60 dark:border-white/[0.06]">
+        <div 
+          ref={previewContainerRef}
+          className="relative aspect-video overflow-hidden bg-muted/40 dark:bg-[#07090e] border-b border-border/60 dark:border-white/[0.06]"
+        >
           {hasValidImage ? (
             <>
               <Image
@@ -118,13 +159,14 @@ export function ProjectCard({
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                 <FolderKanban className="h-8 w-8 opacity-30 animate-pulse" />
               </div>
-              <iframe
-                src={liveUrl}
-                title={`${title} preview`}
-                className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10 border-0"
-                sandbox="allow-scripts allow-same-origin"
-                loading="lazy"
-              />
+              {shouldLoadIframe && (
+                <iframe
+                  src={previewUrl}
+                  title={`${title} preview`}
+                  className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10 border-0"
+                  loading="lazy"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-card dark:from-[#0c1017] to-transparent pointer-events-none z-20" />
               <div className="absolute bottom-3 right-3 z-30">
                 <span 

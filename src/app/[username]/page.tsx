@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getPortfolioBySlug, getPortfolioBySlugForMetadata, incrementPortfolioViews } from "@/actions/portfolio";
 import { PortfolioView } from "./PortfolioView";
 
+export const revalidate = 60;
+
 interface PortfolioPageProps {
   params: Promise<{ username: string }>;
 }
