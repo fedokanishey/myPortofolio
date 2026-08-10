@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { SkillIcon } from "@/components/molecules/SkillSearchInput";
 
@@ -15,72 +15,12 @@ export function AnimatedSkillsCloud({
   primaryColor = "#6366F1",
 }: AnimatedSkillsCloudProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
-  const startXRef = useRef(0);
-  const scrollLeftRef = useRef(0);
-  const isHoveredRef = useRef(false);
-  const animFrameIdRef = useRef<number | null>(null);
 
-  // Repeat skills 4x to ensure smooth continuous scrolling for any screen width
-  const infiniteSkills = React.useMemo(() => {
+  // Duplicate for seamless 50% translation infinite loop
+  const duplicatedSkills = React.useMemo(() => {
     if (!skills || skills.length === 0) return [];
-    return [...skills, ...skills, ...skills, ...skills];
+    return [...skills, ...skills];
   }, [skills]);
-
-  // RequestAnimationFrame continuous smooth marquee loop
-  const stepMarquee = useCallback(() => {
-    const el = scrollRef.current;
-    if (el && !isHoveredRef.current && !isDraggingRef.current && !isExpanded) {
-      // Advance scroll position smoothly
-      el.scrollLeft += 0.75;
-
-      // Loop back seamlessly when halfway through
-      const maxScroll = el.scrollWidth / 2;
-      if (el.scrollLeft >= maxScroll) {
-        el.scrollLeft = 0;
-      }
-    }
-    animFrameIdRef.current = requestAnimationFrame(stepMarquee);
-  }, [isExpanded]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-      return;
-    }
-
-    animFrameIdRef.current = requestAnimationFrame(stepMarquee);
-
-    return () => {
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
-      }
-    };
-  }, [stepMarquee, isExpanded]);
-
-  // Mouse Drag handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    isDraggingRef.current = true;
-    startXRef.current = e.pageX - el.offsetLeft;
-    scrollLeftRef.current = el.scrollLeft;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    e.preventDefault();
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5;
-    el.scrollLeft = scrollLeftRef.current - walk;
-  };
-
-  const handleMouseUpOrLeave = () => {
-    isDraggingRef.current = false;
-  };
 
   if (!skills || skills.length === 0) return null;
 
@@ -136,24 +76,12 @@ export function AnimatedSkillsCloud({
           ))}
         </div>
       ) : (
-        /* Draggable & Infinite Scrolling Marquee Track */
+        /* CSS GPU-Accelerated Hardware Marquee Track */
         <div
-          ref={scrollRef}
-          onMouseEnter={() => {
-            isHoveredRef.current = true;
-          }}
-          onMouseLeave={() => {
-            isHoveredRef.current = false;
-            handleMouseUpOrLeave();
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUpOrLeave}
-          className="relative w-full mask-marquee overflow-x-auto scrollbar-none py-2 cursor-grab active:cursor-grabbing select-none"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="relative w-full mask-marquee overflow-hidden py-2 select-none"
         >
-          <div className="flex w-max items-center gap-3">
-            {infiniteSkills.map((skill, index) => (
+          <div className="flex w-max items-center gap-3 animate-marquee-track">
+            {duplicatedSkills.map((skill, index) => (
               <div
                 key={`${skill}-${index}`}
                 className="relative group cursor-pointer flex-none pointer-events-auto"

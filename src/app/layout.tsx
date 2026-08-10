@@ -10,18 +10,21 @@ import "./globals.css";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-display",
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 const caveat = Caveat({
   subsets: ["latin"],
   variable: "--font-caveat",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {

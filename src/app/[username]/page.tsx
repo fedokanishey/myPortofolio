@@ -47,8 +47,10 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     notFound();
   }
 
-  // Increment views only once per page render
-  await incrementPortfolioViews(username);
+  // Increment views non-blockingly without delaying SSR document response
+  incrementPortfolioViews(username).catch((err) => {
+    console.error("Failed to increment views:", err);
+  });
 
   return <PortfolioView portfolio={portfolio} />;
 }

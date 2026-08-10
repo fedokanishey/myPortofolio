@@ -142,32 +142,44 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
   // Use displayName from content if set, otherwise fallback to Clerk user name
   const displayName = (content as { displayName?: string }).displayName || user.name;
-  const [imageLoaded, setImageLoaded] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState("hero");
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const [hoveredExpIndex, setHoveredExpIndex] = React.useState<number | null>(null);
 
-  // Typewriter effect with pre-rendered sr-only element for 100% LCP performance
+  // Typewriter motion effect
+  const [mounted, setMounted] = React.useState(false);
   const [nameCount, setNameCount] = React.useState(0);
   const [headlineCount, setHeadlineCount] = React.useState(0);
-  const nameFinished = nameCount >= (displayName?.length || 0);
+
   const headlineText = content.headline || "";
-  const headlineFinished = headlineCount >= headlineText.length;
+  const nameLength = displayName?.length || 0;
+  const nameFinished = !mounted || nameCount >= nameLength;
+  const headlineFinished = !mounted || headlineCount >= headlineText.length;
 
   React.useEffect(() => {
-    if (nameCount < (displayName?.length || 0)) {
-      const t = setTimeout(() => setNameCount((c) => c + 1), 60);
+    setMounted(true);
+    setNameCount(0);
+    setHeadlineCount(0);
+  }, []);
+
+  React.useEffect(() => {
+    if (!mounted) return;
+    if (nameCount < nameLength) {
+      const t = setTimeout(() => setNameCount((c) => c + 1), 50);
       return () => clearTimeout(t);
     }
-  }, [nameCount, displayName]);
+  }, [mounted, nameCount, nameLength]);
 
   React.useEffect(() => {
-    if (!nameFinished) return;
+    if (!mounted || !nameFinished) return;
     if (headlineCount < headlineText.length) {
-      const t = setTimeout(() => setHeadlineCount((c) => c + 1), 40);
+      const t = setTimeout(() => setHeadlineCount((c) => c + 1), 35);
       return () => clearTimeout(t);
     }
-  }, [nameFinished, headlineCount, headlineText]);
+  }, [mounted, nameFinished, headlineCount, headlineText]);
+
+  const visibleName = mounted ? displayName.slice(0, nameCount) : displayName;
+  const visibleHeadline = mounted ? headlineText.slice(0, headlineCount) : headlineText;
 
   // Track scroll position for active section and scroll-to-top button (throttled)
   React.useEffect(() => {
@@ -365,44 +377,38 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
         <HeroMeshAura primaryColor={primaryColor} secondaryColor={secondaryColor} />
         
         <div className="container mx-auto px-4 w-full">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+          <div
             className="flex flex-col-reverse lg:flex-row items-center lg:items-start justify-between gap-8 lg:gap-12 max-w-7xl mx-auto w-full pt-2"
           >
             {/* Left Column: Text Content */}
             <div className="flex-1 min-w-0 w-full text-center lg:text-left z-10 space-y-4">
               {/* Status Pill */}
-              <motion.div
-                variants={itemVariants}
+              <div
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/80 dark:border-white/[0.1] bg-card/80 dark:bg-white/[0.03] backdrop-blur-md shadow-sm"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-mono text-muted-foreground dark:text-zinc-300">
                   Available for new opportunities
                 </span>
-              </motion.div>
+              </div>
 
-              {/* Name with Dynamic High-Contrast Gradient */}
-              <motion.div variants={itemVariants} className="space-y-1">
+              {/* Name with Dynamic High-Contrast Gradient & Typewriter Motion */}
+              <div className="space-y-1">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight font-display text-foreground dark:text-white relative">
-                  {/* Pre-rendered text for 100% instant LCP Lighthouse score */}
-                  <span className="sr-only opacity-0 pointer-events-none select-none">{displayName}</span>
                   <span
                     className="bg-clip-text text-transparent"
                     style={{
                       backgroundImage: `linear-gradient(135deg, hsl(var(--foreground)) 20%, ${primaryColor} 70%, ${secondaryColor} 100%)`,
                     }}
                   >
-                    {displayName.slice(0, nameCount)}
+                    {visibleName}
                   </span>
-                  {!nameFinished && (
+                  {mounted && !nameFinished && (
                     <motion.span
                       className="inline-block w-[4px] h-[0.85em] align-middle ml-1 rounded-sm"
                       style={{ background: primaryColor }}
                       animate={{ opacity: [1, 0] }}
-                      transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
+                      transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                     />
                   )}
                 </h1>
@@ -415,35 +421,34 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                       style={{ color: primaryColor }}
                     >
                       <span className="h-2 w-2 rounded-full" style={{ background: primaryColor }} />
-                      <span>{headlineText.slice(0, headlineCount)}</span>
-                      {nameFinished && !headlineFinished && (
+                      <span>{visibleHeadline}</span>
+                      {mounted && nameFinished && !headlineFinished && (
                         <motion.span
                           className="inline-block w-[2px] h-[0.8em] align-middle ml-0.5 rounded-sm"
                           style={{ background: primaryColor }}
                           animate={{ opacity: [1, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
+                          transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
                         />
                       )}
                     </span>
                   </div>
                 )}
-              </motion.div>
+              </div>
 
               {/* Bio */}
               {content.bio && (
-                <motion.div
-                  variants={itemVariants}
+                <div
                   className="text-muted-foreground dark:text-zinc-400 leading-relaxed text-sm sm:text-base max-w-2xl mx-auto lg:mx-0 pt-0.5"
                 >
                   <ExpandableText 
                     text={content.bio}
                     maxLength={260}
                   />
-                </motion.div>
+                </div>
               )}
 
               {/* Social Links & Action Row */}
-              <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-1">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-1">
                 {/* Premium Resume Download with Magnetic Button */}
                 {content.resume && (
                   <MagneticButton strength={25}>
@@ -486,22 +491,22 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                     <SocialLinks links={socialLinksArray} iconSize="lg" className="justify-center lg:justify-start" />
                   </div>
                 )}
-              </motion.div>
+              </div>
 
               {/* Animated Floating Skills Cloud */}
               {sectionVisibility.showSkills && filteredSkills.length > 0 && (
-                <motion.div variants={itemVariants} className="pt-3 w-full max-w-full overflow-hidden">
+                <div className="pt-3 w-full max-w-full overflow-hidden">
                   <AnimatedSkillsCloud
                     skills={filteredSkills}
                     primaryColor={primaryColor}
                     secondaryColor={secondaryColor}
                   />
-                </motion.div>
+                </div>
               )}
             </div>
 
             {/* Right Column: Floating Avatar - Elevated & Enlarged */}
-            <motion.div variants={itemVariants} className="flex-none z-10 mt-6 sm:mt-8 lg:mt-0 lg:self-start lg:pt-1">
+            <div className="flex-none z-10 mt-6 sm:mt-8 lg:mt-0 lg:self-start lg:pt-1">
               <div className="relative">
                 {/* Static outer glow */}
                 <div
@@ -518,25 +523,14 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                 {/* Avatar container */}
                 <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] xl:w-[420px] xl:h-[420px] rounded-full overflow-hidden border-4 sm:border-8 border-background shadow-2xl bg-card">
                   {avatarSrc ? (
-                    <>
-                      <Image
-                        src={avatarSrc}
-                        alt={user.name || displayName}
-                        fill
-                        sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, 420px"
-                        priority
-                        className={`object-cover transition-opacity duration-500 ${
-                          imageLoaded ? "opacity-100" : "opacity-0"
-                        }`}
-                        onLoad={() => setImageLoaded(true)}
-                      />
-                      {!imageLoaded && (
-                        <div 
-                          className="absolute inset-0 animate-pulse"
-                          style={{ background: `linear-gradient(135deg, ${primaryColor}30, ${secondaryColor}30)` }}
-                        />
-                      )}
-                    </>
+                    <Image
+                      src={avatarSrc}
+                      alt={user.name || displayName}
+                      fill
+                      sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, 420px"
+                      priority
+                      className="object-cover"
+                    />
                   ) : (
                     <div
                       className="w-full h-full flex items-center justify-center text-7xl md:text-9xl font-bold text-white content-center"
@@ -547,8 +541,8 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
                   )}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -16,8 +16,15 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
   const isDashboard = pathname?.startsWith("/dashboard");
 
   useEffect(() => {
-    if (typeof window === "undefined" || isDashboard) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (
+      typeof window === "undefined" ||
+      isDashboard ||
+      window.matchMedia("(max-width: 768px)").matches ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
 
     const lenis = new Lenis({
       duration: 1.1,

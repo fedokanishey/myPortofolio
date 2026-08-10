@@ -107,6 +107,7 @@ export function ProjectCard({
                 src={image}
                 alt={title}
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 onError={() => setImageError(true)}
               />
@@ -120,7 +121,7 @@ export function ProjectCard({
               <iframe
                 src={liveUrl}
                 title={`${title} preview`}
-                className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10"
+                className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10 border-0"
                 sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               />

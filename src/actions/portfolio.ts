@@ -398,8 +398,8 @@ export async function togglePublish() {
   }
 }
 
-// Get portfolio by slug (public) - for metadata (no increment)
-export async function getPortfolioBySlugForMetadata(slug: string) {
+// Get portfolio by slug (public) - for metadata and page rendering (cached per request)
+export const getPortfolioBySlug = cache(async (slug: string) => {
   try {
     await connectDB();
 
@@ -417,34 +417,16 @@ export async function getPortfolioBySlugForMetadata(slug: string) {
     console.error("Error fetching portfolio:", error);
     return null;
   }
-}
+});
 
-// Get portfolio by slug (public) - for page rendering (no increment)
-export async function getPortfolioBySlug(slug: string) {
-  try {
-    await connectDB();
+// Alias for metadata compatibility
+export const getPortfolioBySlugForMetadata = getPortfolioBySlug;
 
-    const portfolio = await Portfolio.findOne({ 
-      slug: slug.toLowerCase(),
-      isPublished: true 
-    }).populate("userId", "name image").lean();
-
-    if (!portfolio) {
-      return null;
-    }
-
-    return JSON.parse(JSON.stringify(portfolio)) as IPortfolio & { userId: { name: string; image?: string } };
-  } catch (error) {
-    console.error("Error fetching portfolio:", error);
-    return null;
-  }
-}
-
-// Increment portfolio views (call once per page view)
+// Increment portfolio views (call once per page view, fast updateOne)
 export async function incrementPortfolioViews(slug: string) {
   try {
     await connectDB();
-    await Portfolio.findOneAndUpdate(
+    await Portfolio.updateOne(
       { slug: slug.toLowerCase(), isPublished: true },
       { $inc: { views: 1 } }
     );
