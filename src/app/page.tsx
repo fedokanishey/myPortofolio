@@ -32,8 +32,15 @@ export default function HomePage() {
   return (
     <MainLayout>
       <div className="relative w-full overflow-hidden bg-background text-foreground transition-colors duration-300">
-        {/* 5-Layer Persistent Living Background System */}
-        <PersistentBackgroundSystem primaryColor="#6366F1" secondaryColor="#8B5CF6" />
+        {/* Clean, Modern Architectural Background */}
+        <PersistentBackgroundSystem
+          primaryColor="#6366F1"
+          secondaryColor="#8B5CF6"
+          showGrid={false}
+          showParticles={false}
+          showOrbs={false}
+          showNoise={true}
+        />
 
         {/* Hero Section with Line Reveals & 3D Tilt Mockup */}
         <HeroSection />
