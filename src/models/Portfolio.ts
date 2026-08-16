@@ -59,11 +59,19 @@ export interface IHiddenItems {
   socialLinks: string[]; // Array of hidden social platform names (e.g., "email", "github")
 }
 
+export type PortfolioTemplate = "modern" | "cyber" | "editorial" | "bento";
+export type HeaderStyle = "pill" | "dock" | "banner" | "rail";
+export type HeaderPosition = "top" | "bottom" | "left" | "right";
+
 export interface IThemeConfig {
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
   mode: "light" | "dark" | "system";
+  template?: PortfolioTemplate;
+  showHeader?: boolean;
+  headerStyle?: HeaderStyle;
+  headerPosition?: HeaderPosition;
 }
 
 export interface IContent {
@@ -150,6 +158,10 @@ const ThemeConfigSchema = new Schema<IThemeConfig>(
     secondaryColor: { type: String, default: "#EC4899" },
     fontFamily: { type: String, default: "Inter" },
     mode: { type: String, enum: ["light", "dark", "system"], default: "system" },
+    template: { type: String, enum: ["modern", "cyber", "editorial", "bento"], default: "modern" },
+    showHeader: { type: Boolean, default: true },
+    headerStyle: { type: String, enum: ["pill", "dock", "banner", "rail"], default: "pill" },
+    headerPosition: { type: String, enum: ["top", "bottom", "left", "right"], default: "top" },
   },
   { _id: false }
 );
@@ -238,9 +250,6 @@ const PortfolioSchema = new Schema<IPortfolio>(
     timestamps: true,
   }
 );
-
-// Index for efficient slug lookups
-PortfolioSchema.index({ slug: 1 });
 
 // Prevent Mongoose model recompilation error in development
 if (process.env.NODE_ENV !== "production" && mongoose.models && mongoose.models.Portfolio) {

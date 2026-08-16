@@ -16,3 +16,4 @@ export {
 export { SocialLinks } from "./SocialLinks";
 export { ProjectCard } from "./ProjectCard";
 export { ExperienceItem } from "./ExperienceItem";
+export { PortfolioNavbar } from "./PortfolioNavbar";

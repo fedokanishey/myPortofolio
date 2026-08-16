@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail, FileText, ArrowUpRight } from "lucide-react";
+import { Download, User, Briefcase, FolderKanban, Award, ChevronUp, Mail, FileText, ArrowUpRight, Code2 } from "lucide-react";
 import { ThemeToggle } from "@/components/atoms/ThemeToggle";
 import { ExpandableText } from "@/components/atoms/ExpandableText";
 import { SocialLinks } from "@/components/molecules/SocialLinks";
@@ -19,7 +19,12 @@ import {
   ProjectsBlueprintDeco,
   ContactFlowingRibbons,
 } from "@/components/backgrounds";
+import { PortfolioNavbar } from "@/components/molecules/PortfolioNavbar";
+import { CyberTemplate } from "@/components/templates/portfolio/CyberTemplate";
+import { EditorialTemplate } from "@/components/templates/portfolio/EditorialTemplate";
+import { BentoTemplate } from "@/components/templates/portfolio/BentoTemplate";
 import type { IPortfolio, ISocialLinks, ISectionVisibility, IHiddenItems } from "@/models/Portfolio";
+import { cn } from "@/lib/utils";
 
 // Helper to convert hex to HSL
 function hexToHSL(hex: string): string {
@@ -185,38 +190,75 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   React.useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
+
+      // 1. Top of page threshold -> always Hero
+      if (window.scrollY < 120) {
+        setActiveSection("hero");
+        return;
+      }
+
+      // 2. Bottom of page threshold -> always last item (contact / certifications)
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 120;
+
+      const availableSectionIds = [
+        "hero",
+        "skills",
+        "experience",
+        "projects",
+        "certifications",
+        "contact",
+      ].filter((id) => document.getElementById(id) !== null);
+
+      if (isAtBottom && availableSectionIds.length > 0) {
+        setActiveSection(availableSectionIds[availableSectionIds.length - 1]);
+        return;
+      }
+
+      // 3. Find currently centered/focused section
+      const triggerPoint = 200; // Pixels from top of viewport
+      let currentSection = "hero";
+
+      for (const id of availableSectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= triggerPoint) {
+            currentSection = id;
+          }
+        }
+      }
+
+      setActiveSection(currentSection);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // Zero-reflow section tracking with IntersectionObserver
-    const sections = ["hero", "experience", "projects", "certifications", "contact"];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { rootMargin: "-20% 0px -50% 0px" }
-    );
-
-    sections.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+    // Run once on mount / template change
+    handleScroll();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      observer.disconnect();
     };
-  }, []);
+  }, [themeConfig?.template, sectionVisibility]);
 
   const scrollToSection = (sectionId: string) => {
+    if (sectionId === "hero") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setActiveSection("hero");
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+      const navOffset = 90;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - navOffset;
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: "smooth",
+      });
+      setActiveSection(sectionId);
     }
   };
 
@@ -271,11 +313,14 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   
   const showContactSection = sectionVisibility.showSocialLinks && (hasVisibleEmail || hasVisibleWhatsApp || hasVisibleOtherSocials);
 
-  // Navigation items based on available sections (filtering hidden ones)
+  // Navigation items based on available sections (filtering hidden ones) with unique distinct icons
   const navItems = React.useMemo(() => {
     const items = [
       { id: "hero", icon: User, label: "About" },
     ];
+    if (sectionVisibility.showSkills && filteredSkills.length > 0) {
+      items.push({ id: "skills", icon: Code2, label: "Skills" });
+    }
     if (sectionVisibility.showExperience && filteredExperience.length > 0) {
       items.push({ id: "experience", icon: Briefcase, label: "Experience" });
     }
@@ -289,64 +334,46 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       items.push({ id: "contact", icon: Mail, label: "Contact" });
     }
     return items;
-  }, [sectionVisibility, filteredExperience, filteredProjects, filteredCertifications]);
+  }, [sectionVisibility, filteredSkills, filteredExperience, filteredProjects, filteredCertifications, showContactSection]);
 
-  return (
-    <div className="min-h-screen bg-background overflow-hidden relative">
-      {/* 5-Layer Persistent Living Background System */}
-      <PersistentBackgroundSystem
+  const templateProps = {
+    portfolio,
+    displayName,
+    primaryColor,
+    secondaryColor,
+    avatarSrc,
+    filteredExperience,
+    filteredProjects,
+    filteredCertifications,
+    filteredSkills,
+    socialLinksArray,
+    sectionVisibility,
+    hiddenItems,
+    showContactSection,
+    hasVisibleEmail,
+    hasVisibleWhatsApp,
+  };
+
+  const selectedTemplate = themeConfig?.template || "modern";
+  const isTopBanner = (themeConfig?.showHeader ?? true) && (themeConfig?.headerStyle === "banner") && ((themeConfig?.headerPosition ?? "top") === "top");
+
+  // Reusable Navigation and Scroll Top Component
+  const navComponent = (
+    <>
+      <PortfolioNavbar
+        navItems={navItems}
+        activeSection={activeSection}
+        scrollToSection={scrollToSection}
         primaryColor={primaryColor}
         secondaryColor={secondaryColor}
+        showHeader={themeConfig?.showHeader ?? true}
+        headerStyle={themeConfig?.headerStyle ?? "pill"}
+        headerPosition={themeConfig?.headerPosition ?? "top"}
+        displayName={displayName}
+        avatarSrc={avatarSrc}
+        showContactCTA={showContactSection}
       />
 
-      {/* Fixed Navigation Bar - Centered with Theme Toggle */}
-      <motion.nav
-        className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-      >
-        <div 
-          className="flex items-center gap-0.5 sm:gap-1 px-2 py-1.5 sm:py-2 rounded-full backdrop-blur-xl border border-border/80 dark:border-white/10 shadow-lg bg-card/95 dark:bg-[#0b0f17]/95 text-foreground"
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSection === item.id;
-            return (
-              <motion.button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className="relative p-2 sm:p-3 rounded-full transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                title={item.label}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNav"
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: primaryColor }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <Icon 
-                  className={`h-4 w-4 sm:h-5 sm:w-5 relative z-10 transition-colors ${
-                    isActive ? "text-white" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                />
-              </motion.button>
-            );
-          })}
-          
-          {/* Divider */}
-          <div className="w-px h-5 sm:h-6 bg-border/80 mx-1" />
-          
-          {/* Theme Toggle */}
-          <ThemeToggle variant="icon" />
-        </div>
-      </motion.nav>
-
-      {/* Scroll to Top Button */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
@@ -363,11 +390,67 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
           </motion.button>
         )}
       </AnimatePresence>
+    </>
+  );
+
+  if (selectedTemplate === "cyber") {
+    return (
+      <div className={cn("min-h-screen bg-background overflow-hidden relative", isTopBanner && "pt-16")}>
+        {navComponent}
+        <main id="main-content" className="relative z-10">
+          <CyberTemplate {...templateProps} />
+        </main>
+      </div>
+    );
+  }
+
+  if (selectedTemplate === "editorial") {
+    return (
+      <div className={cn("min-h-screen bg-background overflow-hidden relative", isTopBanner && "pt-16")}>
+        {navComponent}
+        <main id="main-content" className="relative z-10">
+          <EditorialTemplate {...templateProps} />
+        </main>
+      </div>
+    );
+  }
+
+  if (selectedTemplate === "bento") {
+    return (
+      <div className={cn("min-h-screen bg-background overflow-hidden relative", isTopBanner && "pt-16")}>
+        {navComponent}
+        <main id="main-content" className="relative z-10">
+          <BentoTemplate {...templateProps} />
+        </main>
+      </div>
+    );
+  }
+
+  // ── Default / Our SaaS View: Original Modern Aurora View ──
+  return (
+    <div
+      className={cn("min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-hidden", isTopBanner && "pt-16")}
+      style={
+        {
+          "--primary": hexToHSL(primaryColor),
+          "--secondary": hexToHSL(secondaryColor),
+          fontFamily: themeConfig?.fontFamily || "Inter",
+        } as React.CSSProperties
+      }
+    >
+      {/* 5-Layer Persistent Living Background System */}
+      <PersistentBackgroundSystem
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+      />
+
+      {/* Navigation */}
+      {navComponent}
 
       {/* Semantic Main Content Landmark for Accessibility & Performance */}
       <main id="main-content" className="relative z-10">
         {/* Hero Section */}
-        <section id="hero" className="relative pt-28 sm:pt-32 lg:pt-24 pb-10 overflow-hidden">
+        <section id="hero" className="relative pt-28 sm:pt-32 lg:pt-24 pb-10 overflow-hidden scroll-mt-28">
         {/* Living Ambient Mesh Ring Decoration */}
         <HeroMeshAura primaryColor={primaryColor} secondaryColor={secondaryColor} />
         
@@ -490,7 +573,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
               {/* Animated Floating Skills Cloud */}
               {sectionVisibility.showSkills && filteredSkills.length > 0 && (
-                <div className="pt-3 w-full max-w-full overflow-hidden">
+                <div id="skills" className="scroll-mt-28 pt-3 w-full max-w-full overflow-hidden">
                   <AnimatedSkillsCloud
                     skills={filteredSkills}
                     primaryColor={primaryColor}
@@ -550,7 +633,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showExperience && filteredExperience.length > 0 && (
         <motion.section
           id="experience"
-          className="py-20 relative z-10 content-auto"
+          className="py-20 relative z-10 content-auto scroll-mt-28"
           variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
@@ -599,7 +682,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showProjects && filteredProjects.length > 0 && (
         <motion.section
           id="projects"
-          className="py-20 relative z-10 overflow-hidden content-auto"
+          className="py-20 relative z-10 overflow-hidden content-auto scroll-mt-28"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"
@@ -630,7 +713,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {sectionVisibility.showCertifications && filteredCertifications.length > 0 && (
         <motion.section
           id="certifications"
-          className="py-20 relative z-10 overflow-hidden content-auto"
+          className="py-20 relative z-10 overflow-hidden content-auto scroll-mt-28"
           variants={staggeredSection}
           initial="hidden"
           whileInView="visible"
@@ -673,7 +756,7 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
       {showContactSection && (
         <motion.section
           id="contact"
-          className="py-20 relative overflow-hidden content-auto"
+          className="py-20 relative overflow-hidden content-auto scroll-mt-28"
           variants={sectionEntrance}
           initial="hidden"
           whileInView="visible"

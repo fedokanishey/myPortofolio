@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ExternalLink, Github, FolderKanban, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge";
 import { SkillIcon } from "@/components/molecules/SkillSearchInput";
+import { ProjectPreviewFrame } from "@/components/molecules/ProjectPreviewFrame";
 import { MagneticButton } from "@/components/atoms/MagneticButton";
 import { usePerspectiveTilt } from "@/lib/animations/usePerspectiveTilt";
 import { cn } from "@/lib/utils";
@@ -137,57 +138,14 @@ export function ProjectCard({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
 
       <div>
-        {/* Project Thumbnail with Zoom Reveal */}
-        <div 
-          ref={previewContainerRef}
-          className="relative aspect-video overflow-hidden bg-muted/40 dark:bg-[#07090e] border-b border-border/60 dark:border-white/[0.06]"
-        >
-          {hasValidImage ? (
-            <>
-              <Image
-                src={image}
-                alt={title}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                onError={() => setImageError(true)}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-card/80 dark:from-[#0c1017] via-transparent to-transparent opacity-80" />
-            </>
-          ) : liveUrl ? (
-            <>
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <FolderKanban className="h-8 w-8 opacity-30 animate-pulse" />
-              </div>
-              {shouldLoadIframe && (
-                <iframe
-                  src={previewUrl}
-                  title={`${title} preview`}
-                  className="w-[200%] h-[200%] origin-top-left scale-50 pointer-events-none relative z-10 border-0"
-                  loading="lazy"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-card dark:from-[#0c1017] to-transparent pointer-events-none z-20" />
-              <div className="absolute bottom-3 right-3 z-30">
-                <span 
-                  className="text-[10px] font-mono text-white px-2 py-0.5 rounded-full backdrop-blur-md shadow-sm"
-                  style={{ background: primaryColor }}
-                >
-                  Live View
-                </span>
-              </div>
-            </>
-          ) : (
-            <div 
-              className="absolute inset-0 flex items-center justify-center"
-              style={{
-                background: `linear-gradient(135deg, ${primaryColor}10, ${secondaryColor}10)`
-              }}
-            >
-              <FolderKanban className="h-12 w-12 text-muted-foreground/40" />
-            </div>
-          )}
-        </div>
+        {/* Project Thumbnail with Image or Live Iframe Preview */}
+        <ProjectPreviewFrame
+          title={title}
+          image={image}
+          liveUrl={liveUrl}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
+        />
 
         {/* Content Body */}
         <div className="p-6 space-y-4">

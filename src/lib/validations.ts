@@ -52,6 +52,7 @@ export const themeConfigSchema = z.object({
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format"),
   fontFamily: z.string().min(1, "Font family is required"),
   mode: z.enum(["light", "dark", "system"]).default("system"),
+  template: z.enum(["modern", "cyber", "editorial", "bento"]).default("modern").optional(),
 });
 
 export const profileSchema = z.object({

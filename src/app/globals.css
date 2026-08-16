@@ -122,6 +122,25 @@ p, li, span, a {
     -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
   }
 
+  .animate-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-track 28s linear infinite;
+  }
+
+  .animate-marquee-track:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee-track {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
   .border-specular {
     position: relative;
   }

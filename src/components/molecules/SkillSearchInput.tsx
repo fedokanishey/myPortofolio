@@ -565,6 +565,47 @@ export function SkillIcon({ name, size = 14, color, variant }: { name: string; s
   );
 }
 
+export function getSkillCategory(skillName: string): string {
+  const normalized = skillName.trim().toLowerCase();
+  const found = ALL_SKILLS.find(
+    (s) => s.name.toLowerCase() === normalized || s.slug.toLowerCase() === normalized
+  );
+  if (found) {
+    if (found.category === "Cloud" || found.category === "DevOps") return "Cloud & DevOps";
+    return found.category;
+  }
+
+  // Heuristics for unlisted/custom skills
+  if (/react|vue|angular|svelte|solid|css|html|tailwind|bootstrap|frontend|ui|web|next|astro|redux|zustand/i.test(normalized)) {
+    return "Frontend";
+  }
+  if (/node|express|nest|django|flask|spring|laravel|fastapi|backend|api|server|graphql|trpc|asp\.net|hono/i.test(normalized)) {
+    return "Backend";
+  }
+  if (/sql|mongo|postgres|redis|database|db|prisma|drizzle|cassandra|dynamo|mariadb|supabase/i.test(normalized)) {
+    return "Database";
+  }
+  if (/aws|azure|gcp|cloud|docker|kubernetes|k8s|ci\/cd|terraform|ansible|devops|linux|nginx|vercel/i.test(normalized)) {
+    return "Cloud & DevOps";
+  }
+  if (/flutter|react native|swift|kotlin|ios|android|mobile|expo/i.test(normalized)) {
+    return "Mobile";
+  }
+  if (/python|java|c\+\+|c#|rust|golang|go|typescript|javascript|php|ruby|scala|dart|solidity/i.test(normalized)) {
+    return "Languages";
+  }
+  if (/figma|photoshop|illustrator|ui\/ux|design|blender/i.test(normalized)) {
+    return "Design";
+  }
+  if (/jest|cypress|playwright|selenium|vitest|testing|qa/i.test(normalized)) {
+    return "Testing";
+  }
+  if (/git|github|gitlab|docker|postman|vite|webpack|vscode|npm|yarn|pnpm|bun/i.test(normalized)) {
+    return "Tools";
+  }
+  return "Other & Core";
+}
+
 const CATEGORIES = ["All", "Frontend", "Backend", "Languages", "Database", "Cloud", "DevOps", "Tools", "Mobile"];
 
 interface SkillSearchInputProps {
